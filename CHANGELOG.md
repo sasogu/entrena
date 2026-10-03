@@ -2,6 +2,16 @@
 
 Este archivo recoge los cambios relevantes de cada versión. Sigue el formato de [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y versionado semántico.
 
+## 0.4.2 - 2026-10-03 (prueba)
+
+### Añadido
+
+- Catálogo completo de ejercicios en Rutinas → «Añadir ejercicios del catálogo»: 36 ejercicios agrupados por zona (pierna, empuje, tirón, cadera, tronco y cardio), con buscador por nombre o músculo, aviso de los que tienen vídeo y ficha al tocar el nombre. Se pueden añadir varios seguidos al día que se está editando; las series se ajustan después con «Editar». Sigue disponible escribir un ejercicio que no está.
+
+### Corregido
+
+- En Personaliza tu rutina, los botones de días («Añadir día», «Renombrar», «Quitar día») no cabían en móviles estrechos y se desbordaban.
+
 ## 0.4.1 - 2026-10-03 (prueba)
 
 ### Añadido

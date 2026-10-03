@@ -10,6 +10,7 @@ import 'ai/ai_screens.dart';
 import 'ai/routine_ai.dart';
 import 'backup.dart';
 import 'credits_screen.dart';
+import 'exercise_catalog_screen.dart';
 import 'exercise_guide.dart';
 import 'exercise_guide_sheet.dart';
 import 'models.dart';
@@ -700,6 +701,28 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     if (result == null || !mounted) return;
     setState(() => (_sessionSets[index] ??= []).add(result));
+  }
+
+  Future<void> _openCatalog() {
+    final day = _currentDay;
+    return Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ExerciseCatalogScreen(
+          dayName: day.name,
+          alreadyAdded: {for (final exercise in day.exercises) exercise.name},
+          onAdd: (exercise) async {
+            setState(() {
+              day.exercises.add(exercise);
+              _profile.routineName = 'Mi rutina personalizada';
+              _sessionSets.clear();
+            });
+            await _save();
+          },
+          onCustom: () => _editExercise(),
+        ),
+      ),
+    );
   }
 
   Future<void> _editExercise([int? index]) async {
@@ -1480,22 +1503,13 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       const SizedBox(height: 18),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            'Personaliza tu rutina',
-            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
-          ),
-          TextButton.icon(
-            onPressed: () => _editExercise(),
-            icon: const Icon(Icons.add),
-            label: const Text('Añadir'),
-          ),
-        ],
+      const Text(
+        'Personaliza tu rutina',
+        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
       ),
+      const SizedBox(height: 8),
       _daySelector(),
-      Row(
+      Wrap(
         children: [
           TextButton.icon(
             onPressed: _addDay,
@@ -1516,6 +1530,19 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
         ],
       ),
+      const SizedBox(height: 4),
+      FilledButton.tonalIcon(
+        onPressed: _openCatalog,
+        icon: const Icon(Icons.library_add_outlined),
+        label: Text(
+          _multiDay
+              ? 'Añadir ejercicios del catálogo a ${_currentDay.name}'
+              : 'Añadir ejercicios del catálogo',
+          overflow: TextOverflow.ellipsis,
+        ),
+        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+      ),
+      const SizedBox(height: 10),
       ..._exercises.asMap().entries.map(
         (entry) => Card(
           margin: const EdgeInsets.only(bottom: 7),
