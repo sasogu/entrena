@@ -1,8 +1,12 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'backup.dart';
 import 'models.dart';
 import 'progress.dart';
 import 'progress_screens.dart';
@@ -138,6 +142,157 @@ class _HomeScreenState extends State<HomeScreen> {
       _sessionNote = '';
     });
     await _save();
+  }
+
+  void _showMessage(String text) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+
+  Future<void> _exportData() async {
+    final now = DateTime.now();
+    final name = backupFileName(now);
+    final bytes = Uint8List.fromList(
+      utf8.encode(encodeBackup(_profiles, now: now)),
+    );
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text(
+                'Exportar datos',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+              subtitle: Text(
+                '${_profiles.length} ${_profiles.length == 1 ? 'perfil' : 'perfiles'} · '
+                '${sessionCount(_profiles)} sesiones. Guarda el fichero fuera '
+                'de la app para no perder nada si cambias de móvil.',
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.save_alt),
+              title: const Text('Guardar en el móvil'),
+              subtitle: const Text('Descargas, Drive u otra carpeta'),
+              onTap: () => Navigator.pop(context, 'save'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.share),
+              title: const Text('Enviar…'),
+              subtitle: const Text('Correo, Telegram, Drive…'),
+              onTap: () => Navigator.pop(context, 'share'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (action == null || !mounted) return;
+    try {
+      if (action == 'save') {
+        final path = await FilePicker.saveFile(
+          dialogTitle: 'Guardar copia de Entrena',
+          fileName: name,
+          bytes: bytes,
+        );
+        if (path != null && mounted) _showMessage('Copia guardada: $name');
+      } else {
+        await SharePlus.instance.share(
+          ShareParams(
+            subject: 'Copia de Entrena',
+            files: [
+              XFile.fromData(bytes, name: name, mimeType: 'application/json'),
+            ],
+            fileNameOverrides: [name],
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) _showMessage('No se ha podido exportar la copia.');
+    }
+  }
+
+  Future<void> _importData() async {
+    final List<Profile> imported;
+    try {
+      final picked = await FilePicker.pickFiles(withData: true);
+      final bytes = picked?.files.single.bytes;
+      if (bytes == null) return;
+      imported = decodeBackup(utf8.decode(bytes, allowMalformed: true));
+    } on BackupException catch (error) {
+      if (mounted) _showMessage(error.message);
+      return;
+    } catch (_) {
+      if (mounted) _showMessage('No se ha podido leer el fichero.');
+      return;
+    }
+    if (!mounted) return;
+    final names = imported.map((profile) => profile.name).join(', ');
+    final mode = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Importar datos'),
+        content: Text(
+          'La copia tiene ${imported.length} '
+          '${imported.length == 1 ? 'perfil' : 'perfiles'} ($names) con '
+          '${sessionCount(imported)} sesiones.\n\n'
+          '«Añadir» los suma a los perfiles que ya tienes. '
+          '«Reemplazar» borra los datos actuales de este móvil y deja solo '
+          'los de la copia.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'replace'),
+            child: const Text('Reemplazar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, 'merge'),
+            child: const Text('Añadir'),
+          ),
+        ],
+      ),
+    );
+    if (mode == null || !mounted) return;
+    if (mode == 'replace') {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('¿Reemplazar todos los datos?'),
+          content: Text(
+            'Se borrarán ${_profiles.length} '
+            '${_profiles.length == 1 ? 'perfil' : 'perfiles'} y '
+            '${sessionCount(_profiles)} sesiones de este móvil. '
+            'Si no los tienes exportados, no se podrán recuperar.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Reemplazar'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !mounted) return;
+    }
+    setState(() {
+      if (mode == 'replace') {
+        _profiles = imported;
+        _selected = 0;
+      } else {
+        _profiles = mergeProfiles(_profiles, imported);
+      }
+      _sessionSets.clear();
+      _sessionNote = '';
+    });
+    await _save();
+    if (mounted) _showMessage('Datos importados.');
   }
 
   Future<void> _chooseGoal() async {
@@ -478,6 +633,29 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         actions: [
+          PopupMenuButton<String>(
+            tooltip: 'Más opciones',
+            onSelected: (value) =>
+                value == 'export' ? _exportData() : _importData(),
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: 'export',
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.upload_file),
+                  title: Text('Exportar datos'),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'import',
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.download),
+                  title: Text('Importar datos'),
+                ),
+              ),
+            ],
+          ),
           PopupMenuButton<int>(
             tooltip: 'Cambiar perfil',
             initialValue: _selected,
