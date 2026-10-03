@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Llamadas a la IA (Claude, OpenAI o DeepSeek) con la clave del usuario. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="Entrena"
         android:name="${applicationName}"

@@ -2,7 +2,20 @@
 
 Este archivo recoge los cambios relevantes de cada versión. Sigue el formato de [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y versionado semántico.
 
-## [Sin publicar] - 0.1.2
+## [Sin publicar] - 0.2.0
+
+### Añadido
+
+- Propuestas de rutina con IA (Rutinas → «Pedir propuestas a la IA»): objetivo, nivel, días, minutos, material, molestias opcionales y, si se quiere, un resumen del historial. La IA devuelve 3 rutinas que explican en qué se diferencian; se puede elegir una o conservar la actual.
+- Las propuestas solo usan ejercicios del catálogo de la app, así que todas tienen ficha y, cuando existe, vídeo. Los ejercicios desconocidos se descartan y se avisa.
+- Ajustes de IA (menú ⋮): Claude, OpenAI o DeepSeek con la clave de API propia, guardada cifrada en el móvil y fuera de la copia exportada. Incluye «Probar conexión» y borrar la clave.
+- Antes del primer envío a cada proveedor se muestra exactamente el texto que se envía y se pide permiso.
+
+### Cambiado
+
+- La app pide permiso de Internet (solo para la IA).
+
+## 0.1.2 - 2026-10-03 (prueba)
 
 ### Añadido
 

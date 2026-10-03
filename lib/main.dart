@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'ai/ai_screens.dart';
+import 'ai/routine_ai.dart';
 import 'backup.dart';
 import 'credits_screen.dart';
 import 'exercise_guide_sheet.dart';
@@ -374,6 +376,23 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _openRoutineAi() => Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => RoutineAiScreen(
+        goal: _profile.goal,
+        historySummary: summarizeHistory(_profile.history),
+        onApply: (proposal) => _selectRoutine(
+          RoutineOption(
+            name: proposal.name,
+            summary: proposal.summary,
+            exercises: proposal.exercises,
+          ),
+        ),
+      ),
+    ),
+  );
+
   List<RoutineOption> _optionsForGoal() {
     final prescription = switch (_profile.goal) {
       'Ganar fuerza' => '3 series · 6–8 repeticiones',
@@ -640,6 +659,10 @@ class _HomeScreenState extends State<HomeScreen> {
             onSelected: (value) => switch (value) {
               'export' => _exportData(),
               'import' => _importData(),
+              'ai' => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AiSettingsScreen()),
+              ),
               _ => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const CreditsScreen()),
@@ -660,6 +683,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(Icons.download),
                   title: Text('Importar datos'),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'ai',
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.auto_awesome_outlined),
+                  title: Text('Ajustes de IA'),
                 ),
               ),
               PopupMenuItem(
@@ -1033,28 +1064,22 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }),
       Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Row(
-                children: [
-                  Icon(Icons.auto_awesome_outlined),
-                  SizedBox(width: 8),
-                  Text(
-                    'Más adelante, con IA',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Estas son opciones de ejemplo. La IA podrá proponer alternativas adaptadas a tu objetivo cuando conectemos el servicio.',
-                style: TextStyle(color: Colors.grey.shade700),
-              ),
-            ],
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 6,
           ),
+          leading: const Icon(Icons.auto_awesome),
+          title: const Text(
+            'Pedir propuestas a la IA',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
+          subtitle: const Text(
+            'Rutinas adaptadas a tu objetivo, nivel y material. '
+            'Tú eliges si aplicas alguna.',
+          ),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: _openRoutineAi,
         ),
       ),
       const SizedBox(height: 18),
@@ -1243,8 +1268,10 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(fontWeight: FontWeight.w700),
             ),
             subtitle: const Text(
-              'El siguiente paso será conectar un asistente para revisar tus entrenamientos y sugerir ajustes. Tú decides qué cambios aplicar.',
+              'Pide a la IA rutinas nuevas que tengan en cuenta tu historial. Tú decides qué cambios aplicar.',
             ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: _openRoutineAi,
           ),
         ),
       ],

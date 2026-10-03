@@ -19,7 +19,11 @@ Requiere Android 7.0 o superior. Los datos se guardan solo en el móvil: si desi
 - Progreso por ejercicio con récord, gráfica de evolución e historial completo.
 - Persistencia local mediante `shared_preferences`.
 
-Los perfiles actuales no son cuentas y no se sincronizan entre dispositivos. Las rutinas son plantillas locales: la IA todavía no está conectada ni se envían datos a ningún servicio.
+Los perfiles no son cuentas y no se sincronizan entre dispositivos; para pasar los datos a otro móvil, usa Exportar e Importar.
+
+## IA opcional
+
+En Rutinas → «Pedir propuestas a la IA» la app sugiere tres rutinas según tu objetivo, nivel y material. Funciona con tu propia clave de API de Claude, OpenAI o DeepSeek (menú ⋮ → Ajustes de IA): la app llama directamente al proveedor, sin servidor intermedio, y la clave se guarda cifrada en el móvil. Sin clave, la app funciona igual sin IA. Antes del primer envío se muestra exactamente qué datos se mandan.
 
 ## Ejecutar
 

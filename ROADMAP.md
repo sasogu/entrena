@@ -28,21 +28,22 @@ Las alternativas actuales son plantillas locales sencillas, no recomendaciones g
 - [ ] Grabar vídeos propios para los ejercicios sin vídeo libre.
 - [ ] Probar en el móvil y publicar.
 
-## 0.2 · Cuentas y sincronización — pendiente
+## 0.2 · Propuestas de IA — en pruebas
+
+- [x] Clave de API propia (Claude, OpenAI o DeepSeek), cifrada en el móvil; sin servidor intermedio.
+- [x] Mostrar lo que se envía y pedir consentimiento antes del primer envío.
+- [x] Generar varias rutinas comparables para el objetivo y nivel de cada persona.
+- [x] Explicar las diferencias entre propuestas y permitir elegir o conservar la rutina actual.
+- [x] Pedir aprobación antes de aplicar una propuesta.
+- [ ] Revisar el historial y sugerir ajustes concretos (subir peso, cambiar un ejercicio estancado).
+
+## Más adelante · Cuentas y sincronización — aplazada
 
 - [ ] Definir si habrá cuentas individuales o un grupo compartido.
 - [ ] Elegir autenticación y backend.
 - [ ] Sincronizar perfiles, rutinas e historial entre móviles.
 - [ ] Resolver uso sin conexión y conflictos de sincronización.
-- [ ] Ofrecer exportación y borrado de datos.
-
-## 0.3 · Propuestas de IA — pendiente
-
-- [ ] Elegir proveedor y crear un backend intermedio; no incluir claves en la app.
-- [ ] Pedir consentimiento antes de enviar objetivos e historial para su análisis.
-- [ ] Generar varias rutinas comparables para el objetivo y nivel de cada persona.
-- [ ] Explicar las diferencias entre propuestas y permitir elegir o conservar la rutina actual.
-- [ ] Pedir aprobación antes de aplicar cambios sugeridos por la IA.
+- [ ] Borrado de datos en el servidor.
 
 ## Criterios del producto
 
