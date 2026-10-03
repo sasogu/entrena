@@ -2,6 +2,12 @@
 
 Este archivo recoge los cambios relevantes de cada versión. Sigue el formato de [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y versionado semántico.
 
+## 0.4.3 - 2026-10-03 (prueba)
+
+### Añadido
+
+- Cambiar el orden de los ejercicios en Personaliza tu rutina: arrastrando desde el asa (≡) o con «Subir» y «Bajar» en el menú de cada ejercicio. Las series ya apuntadas hoy se mueven con su ejercicio.
+
 ## 0.4.2 - 2026-10-03 (prueba)
 
 ### Añadido

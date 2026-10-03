@@ -862,6 +862,26 @@ class _HomeScreenState extends State<HomeScreen> {
     await _save();
   }
 
+  /// Mueve un ejercicio dentro del día. Las series ya apuntadas hoy se mueven
+  /// con él, porque se guardan por posición.
+  Future<void> _moveExercise(int from, int to) async {
+    if (from == to || to < 0 || to >= _exercises.length) return;
+    setState(() {
+      final sets = [
+        for (var i = 0; i < _exercises.length; i++) _sessionSets[i],
+      ];
+      _exercises.insert(to, _exercises.removeAt(from));
+      sets.insert(to, sets.removeAt(from));
+      _sessionSets
+        ..clear()
+        ..addAll({
+          for (var i = 0; i < sets.length; i++)
+            if (sets[i] != null) i: sets[i]!,
+        });
+    });
+    await _save();
+  }
+
   Future<void> _removeExercise(int index) async {
     final exercise = _exercises[index];
     final confirmed = await showDialog<bool>(
@@ -1543,34 +1563,70 @@ class _HomeScreenState extends State<HomeScreen> {
         style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
       ),
       const SizedBox(height: 10),
-      ..._exercises.asMap().entries.map(
-        (entry) => Card(
-          margin: const EdgeInsets.only(bottom: 7),
-          child: ListTile(
-            leading: Icon(
-              entry.value.icon,
-              color: Theme.of(context).colorScheme.primary,
+      // Arrastrar desde el asa (≡) para cambiar el orden.
+      ReorderableListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        buildDefaultDragHandles: false,
+        itemCount: _exercises.length,
+        onReorder: (from, to) => _moveExercise(from, to > from ? to - 1 : to),
+        itemBuilder: (context, index) {
+          final exercise = _exercises[index];
+          final last = index == _exercises.length - 1;
+          return Card(
+            key: ObjectKey(exercise),
+            margin: const EdgeInsets.only(bottom: 7),
+            child: ListTile(
+              contentPadding: const EdgeInsets.only(left: 4, right: 4),
+              leading: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ReorderableDragStartListener(
+                    index: index,
+                    child: const Padding(
+                      padding: EdgeInsets.all(8),
+                      child: Tooltip(
+                        message: 'Arrastra para cambiar el orden',
+                        child: Icon(Icons.drag_indicator),
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    exercise.icon,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ],
+              ),
+              title: Text(
+                exercise.name,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(exercise.detail),
+              onTap: () => showExerciseGuide(context, exercise.name),
+              trailing: PopupMenuButton<String>(
+                onSelected: (action) => switch (action) {
+                  'guide' => showExerciseGuide(context, exercise.name),
+                  'up' => _moveExercise(index, index - 1),
+                  'down' => _moveExercise(index, index + 1),
+                  'edit' => _editExercise(index),
+                  _ => _removeExercise(index),
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'guide',
+                    child: Text('Cómo se hace'),
+                  ),
+                  if (index > 0)
+                    const PopupMenuItem(value: 'up', child: Text('Subir')),
+                  if (!last)
+                    const PopupMenuItem(value: 'down', child: Text('Bajar')),
+                  const PopupMenuItem(value: 'edit', child: Text('Editar')),
+                  const PopupMenuItem(value: 'remove', child: Text('Quitar')),
+                ],
+              ),
             ),
-            title: Text(
-              entry.value.name,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text(entry.value.detail),
-            onTap: () => showExerciseGuide(context, entry.value.name),
-            trailing: PopupMenuButton<String>(
-              onSelected: (action) => switch (action) {
-                'guide' => showExerciseGuide(context, entry.value.name),
-                'edit' => _editExercise(entry.key),
-                _ => _removeExercise(entry.key),
-              },
-              itemBuilder: (context) => const [
-                PopupMenuItem(value: 'guide', child: Text('Cómo se hace')),
-                PopupMenuItem(value: 'edit', child: Text('Editar')),
-                PopupMenuItem(value: 'remove', child: Text('Quitar')),
-              ],
-            ),
-          ),
-        ),
+          );
+        },
       ),
       const SizedBox(height: 14),
       Card(
