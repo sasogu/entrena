@@ -2,6 +2,12 @@
 
 Este archivo recoge los cambios relevantes de cada versión. Sigue el formato de [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y versionado semántico.
 
+## 0.4.1 - 2026-10-03 (prueba)
+
+### Añadido
+
+- Deslizar a izquierda o derecha cambia entre Hoy, Rutinas y Progreso. La barra inferior sigue funcionando, ahora con animación.
+
 ## 0.4.0 - 2026-10-03 (prueba)
 
 ### Añadido

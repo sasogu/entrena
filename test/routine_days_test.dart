@@ -7,6 +7,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// La lista vertical de la página visible (hay además un PageView horizontal).
+final _verticalList = find
+    .byWidgetPredicate(
+      (widget) =>
+          widget is Scrollable && widget.axisDirection == AxisDirection.down,
+    )
+    .first;
+
 void main() {
   test('las rutinas de ejemplo tienen días y «Fuerza con barra» usa barra', () {
     final barbell = routineOptions.singleWhere(
@@ -84,7 +92,11 @@ void main() {
     // Con series apuntadas no se puede cambiar de día.
     expect(find.textContaining('para cambiar de día'), findsOneWidget);
 
-    await tester.scrollUntilVisible(find.text('Guardar entrenamiento'), 300);
+    await tester.scrollUntilVisible(
+      find.text('Guardar entrenamiento'),
+      300,
+      scrollable: _verticalList,
+    );
     await tester.tap(find.text('Guardar entrenamiento'));
     await tester.pumpAndSettle();
 

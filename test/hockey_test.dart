@@ -22,6 +22,14 @@ Future<void> _openRoutines(WidgetTester tester, String goal) async {
   await tester.pumpAndSettle();
 }
 
+/// La lista vertical de la página visible (hay además un PageView horizontal).
+final _verticalList = find
+    .byWidgetPredicate(
+      (widget) =>
+          widget is Scrollable && widget.axisDirection == AxisDirection.down,
+    )
+    .first;
+
 void main() {
   test('hay objetivos de hockey línea con contexto para la IA', () {
     final hockey = goalOptions.where((g) => g.startsWith('Hockey línea'));
@@ -63,7 +71,7 @@ void main() {
     await tester.scrollUntilVisible(
       find.text('Fuerza con barra'),
       300,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: _verticalList,
     );
     final generic = tester.getTopLeft(find.text('Fuerza con barra')).dy;
     expect(find.text('Hockey línea'), findsOneWidget);

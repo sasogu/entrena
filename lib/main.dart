@@ -58,6 +58,8 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Profile> _profiles = [Profile('Mi perfil')];
   int _selected = 0;
   int _tab = 0;
+  final _pages = PageController();
+  bool _animatingToTab = false;
   final Map<int, List<WorkoutSet>> _sessionSets = {};
   String _sessionNote = '';
   bool _loaded = false;
@@ -79,6 +81,27 @@ class _HomeScreenState extends State<HomeScreen> {
   bool get _multiDay => _profile.days.length > 1;
 
   String _dayTitle(int index) => _profile.days[index].name;
+
+  @override
+  void dispose() {
+    _pages.dispose();
+    super.dispose();
+  }
+
+  /// Cambia de pestaña desde la barra o un botón, con animación.
+  Future<void> _goToTab(int index) async {
+    setState(() => _tab = index);
+    if (!_pages.hasClients) return;
+    // Mientras dura la animación se ignoran las páginas intermedias, para que
+    // el indicador de la barra no parpadee al saltar de Hoy a Progreso.
+    _animatingToTab = true;
+    await _pages.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+    );
+    _animatingToTab = false;
+  }
 
   @override
   void initState() {
@@ -517,8 +540,8 @@ class _HomeScreenState extends State<HomeScreen> {
       _day = _profile.nextDay;
       _sessionSets.clear();
       _sessionNote = '';
-      _tab = 2;
     });
+    _goToTab(2);
     await _save();
     if (mounted) {
       ScaffoldMessenger.of(
@@ -961,10 +984,19 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: !_loaded
           ? const Center(child: CircularProgressIndicator())
-          : SafeArea(child: _content()),
+          : SafeArea(
+              // Deslizar a los lados cambia entre Hoy, Rutinas y Progreso.
+              child: PageView(
+                controller: _pages,
+                onPageChanged: (index) {
+                  if (!_animatingToTab) setState(() => _tab = index);
+                },
+                children: [_today(), _routinePage(), _progressPage()],
+              ),
+            ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
-        onDestinationSelected: (index) => setState(() => _tab = index),
+        onDestinationSelected: _goToTab,
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.today_outlined),
@@ -985,12 +1017,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-  Widget _content() => switch (_tab) {
-    0 => _today(),
-    1 => _routinePage(),
-    _ => _progressPage(),
-  };
 
   Widget _today() => ListView(
     padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
@@ -1039,7 +1065,7 @@ class _HomeScreenState extends State<HomeScreen> {
             subtitle: const Text(
               'Añádelos en Rutinas → Personaliza tu rutina.',
             ),
-            onTap: () => setState(() => _tab = 1),
+            onTap: () => _goToTab(1),
           ),
         ),
       ..._exercises.asMap().entries.map(
@@ -1335,7 +1361,7 @@ class _HomeScreenState extends State<HomeScreen> {
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
-                onPressed: () => setState(() => _tab = 0),
+                onPressed: () => _goToTab(0),
                 icon: const Icon(Icons.play_arrow),
                 label: const Text('Empezar'),
               ),
@@ -1420,7 +1446,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   width: double.infinity,
                   child: selected
                       ? OutlinedButton.icon(
-                          onPressed: () => setState(() => _tab = 0),
+                          onPressed: () => _goToTab(0),
                           icon: const Icon(Icons.play_arrow),
                           label: const Text('Empezar'),
                         )
