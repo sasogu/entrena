@@ -1,4 +1,4 @@
-import 'package:entrena/main.dart';
+import 'package:entrena/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

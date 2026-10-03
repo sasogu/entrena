@@ -2,7 +2,7 @@
 
 El diseño debe seguir siendo sencillo de usar durante una sesión: registrar una serie en pocos toques, comparar rutinas y mantener el control sobre cualquier cambio.
 
-## 0.1 · Rutinas y registro local — en curso
+## 0.1 · Rutinas y registro local — completada
 
 - [x] App Android en Flutter con vistas Hoy, Rutinas y Progreso.
 - [x] Perfiles separados en un mismo dispositivo.
@@ -12,7 +12,7 @@ El diseño debe seguir siendo sencillo de usar durante una sesión: registrar un
 - [x] Registrar series, repeticiones y peso por sesión.
 - [x] Guardar el historial de sesiones por perfil en el dispositivo.
 - [x] Añadir notas opcionales por sesión.
-- [ ] Revisar progresos por ejercicio y mejorar el historial.
+- [x] Revisar progresos por ejercicio y mejorar el historial.
 
 Las alternativas actuales son plantillas locales sencillas, no recomendaciones generadas por IA. Los objetivos de fuerza, hipertrofia y resistencia ajustan las repeticiones sugeridas; otros objetivos usan una pauta general.
 

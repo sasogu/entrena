@@ -3,6 +3,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'models.dart';
+import 'progress.dart';
+import 'progress_screens.dart';
+
 void main() => runApp(const EntrenaApp());
 
 class EntrenaApp extends StatelessWidget {
@@ -29,193 +33,6 @@ class EntrenaApp extends StatelessWidget {
       ),
     ),
     home: const HomeScreen(),
-  );
-}
-
-class Profile {
-  Profile(this.name, {this.workouts = 0, this.lastWorkout})
-    : exercises = List<Exercise>.of(defaultRoutine);
-  final String name;
-  int workouts;
-  DateTime? lastWorkout;
-  List<Exercise> exercises;
-  List<WorkoutRecord> history = [];
-  String goal = 'Empezar a entrenar';
-  String routineName = 'Cuerpo completo A';
-
-  Map<String, dynamic> toJson() => {
-    'name': name,
-    'workouts': workouts,
-    'lastWorkout': lastWorkout?.toIso8601String(),
-    'exercises': exercises.map((exercise) => exercise.toJson()).toList(),
-    'history': history.map((record) => record.toJson()).toList(),
-    'goal': goal,
-    'routineName': routineName,
-  };
-
-  factory Profile.fromJson(Map<String, dynamic> json) {
-    final profile = Profile(
-      json['name'] as String,
-      workouts: (json['workouts'] as num?)?.toInt() ?? 0,
-      lastWorkout: json['lastWorkout'] == null
-          ? null
-          : DateTime.tryParse(json['lastWorkout'] as String),
-    );
-    final exercises = json['exercises'] as List<dynamic>?;
-    if (exercises != null) {
-      profile.exercises = exercises
-          .map((item) => Exercise.fromJson(item as Map<String, dynamic>))
-          .toList();
-    }
-    final history = json['history'] as List<dynamic>?;
-    if (history != null) {
-      profile.history = history
-          .map((item) => WorkoutRecord.fromJson(item as Map<String, dynamic>))
-          .toList();
-    }
-    profile.goal = json['goal'] as String? ?? profile.goal;
-    profile.routineName = json['routineName'] as String? ?? profile.routineName;
-    return profile;
-  }
-}
-
-class Exercise {
-  const Exercise(this.name, this.detail, this.iconIndex);
-  final String name;
-  final String detail;
-  final int iconIndex;
-  IconData get icon =>
-      exerciseIcons[iconIndex.clamp(0, exerciseIcons.length - 1).toInt()];
-
-  Map<String, dynamic> toJson() => {
-    'name': name,
-    'detail': detail,
-    'iconIndex': iconIndex,
-  };
-
-  factory Exercise.fromJson(Map<String, dynamic> json) => Exercise(
-    json['name'] as String,
-    json['detail'] as String? ?? '3 series · 8–12 repeticiones',
-    (json['iconIndex'] as num?)?.toInt() ?? 0,
-  );
-}
-
-const exerciseIcons = [
-  Icons.fitness_center,
-  Icons.sports_gymnastics,
-  Icons.cable,
-  Icons.sports_handball,
-  Icons.self_improvement,
-];
-
-const defaultRoutine = [
-  Exercise('Sentadilla goblet', '3 series · 8–10 repeticiones', 0),
-  Exercise('Press de pecho en máquina', '3 series · 8–12 repeticiones', 1),
-  Exercise('Jalón al pecho', '3 series · 10–12 repeticiones', 2),
-  Exercise(
-    'Peso muerto rumano con mancuernas',
-    '2 series · 10 repeticiones',
-    3,
-  ),
-  Exercise('Plancha', '3 series · 20–30 segundos', 4),
-];
-
-class RoutineOption {
-  const RoutineOption({
-    required this.name,
-    required this.summary,
-    required this.exercises,
-  });
-  final String name;
-  final String summary;
-  final List<Exercise> exercises;
-}
-
-const routineOptions = [
-  RoutineOption(
-    name: 'Cuerpo completo A',
-    summary: 'Máquinas y movimientos básicos · sencilla para empezar',
-    exercises: defaultRoutine,
-  ),
-  RoutineOption(
-    name: 'Cuerpo completo B',
-    summary: 'Alternativa con otros movimientos y un ritmo tranquilo',
-    exercises: [
-      Exercise('Prensa de piernas', '3 series · 8–12 repeticiones', 0),
-      Exercise('Press inclinado en máquina', '3 series · 8–12 repeticiones', 1),
-      Exercise('Remo sentado en polea', '3 series · 10–12 repeticiones', 2),
-      Exercise('Puente de glúteos', '2 series · 10–12 repeticiones', 3),
-      Exercise('Dead bug', '3 series · 8 por lado', 4),
-    ],
-  ),
-];
-
-const goalOptions = [
-  'Empezar a entrenar',
-  'Ganar fuerza',
-  'Aumentar masa muscular',
-  'Mejorar resistencia',
-  'Perder grasa',
-  'Moverme y sentirme mejor',
-];
-
-class WorkoutSet {
-  const WorkoutSet({required this.reps, required this.weight});
-  final int reps;
-  final double weight;
-
-  Map<String, dynamic> toJson() => {'reps': reps, 'weight': weight};
-
-  factory WorkoutSet.fromJson(Map<String, dynamic> json) => WorkoutSet(
-    reps: (json['reps'] as num?)?.toInt() ?? 0,
-    weight: (json['weight'] as num?)?.toDouble() ?? 0,
-  );
-}
-
-class LoggedExercise {
-  const LoggedExercise({required this.name, required this.sets});
-  final String name;
-  final List<WorkoutSet> sets;
-
-  Map<String, dynamic> toJson() => {
-    'name': name,
-    'sets': sets.map((set) => set.toJson()).toList(),
-  };
-
-  factory LoggedExercise.fromJson(Map<String, dynamic> json) => LoggedExercise(
-    name: json['name'] as String,
-    sets: (json['sets'] as List<dynamic>)
-        .map((item) => WorkoutSet.fromJson(item as Map<String, dynamic>))
-        .toList(),
-  );
-}
-
-class WorkoutRecord {
-  const WorkoutRecord({
-    required this.date,
-    required this.routineName,
-    required this.exercises,
-    this.note = '',
-  });
-  final DateTime date;
-  final String routineName;
-  final List<LoggedExercise> exercises;
-  final String note;
-
-  Map<String, dynamic> toJson() => {
-    'date': date.toIso8601String(),
-    'routineName': routineName,
-    'exercises': exercises.map((exercise) => exercise.toJson()).toList(),
-    if (note.isNotEmpty) 'note': note,
-  };
-
-  factory WorkoutRecord.fromJson(Map<String, dynamic> json) => WorkoutRecord(
-    date: DateTime.tryParse(json['date'] as String) ?? DateTime.now(),
-    routineName: json['routineName'] as String? ?? 'Rutina anterior',
-    exercises: (json['exercises'] as List<dynamic>)
-        .map((item) => LoggedExercise.fromJson(item as Map<String, dynamic>))
-        .toList(),
-    note: json['note'] as String? ?? '',
   );
 }
 
@@ -912,7 +729,7 @@ class _HomeScreenState extends State<HomeScreen> {
         subtitle: Text(
           sets.isEmpty
               ? exercise.detail
-              : '${sets.length} series · ${sets.map((set) => '${set.reps}×${set.weight} kg').join(', ')}',
+              : '${sets.length} series · ${sets.map((set) => '${set.reps}×${formatKg(set.weight)}').join(', ')}',
         ),
         trailing: IconButton.filledTonal(
           tooltip: 'Añadir serie',
@@ -1092,8 +909,11 @@ class _HomeScreenState extends State<HomeScreen> {
     ],
   );
 
+  static const _recentLimit = 5;
+
   Widget _progressPage() {
     final last = _profile.lastWorkout;
+    final exerciseProgress = buildExerciseProgress(_profile.history);
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
@@ -1154,46 +974,58 @@ class _HomeScreenState extends State<HomeScreen> {
                       'El detalle estará disponible en las próximas sesiones.',
                     ),
                   )
-                else
+                else ...[
                   ..._profile.history
-                      .take(8)
-                      .map(
-                        (record) => ExpansionTile(
-                          tilePadding: EdgeInsets.zero,
-                          leading: const CircleAvatar(child: Icon(Icons.check)),
-                          title: Text(
-                            record.routineName,
-                            style: const TextStyle(fontWeight: FontWeight.w700),
+                      .take(_recentLimit)
+                      .map((record) => WorkoutRecordTile(record: record)),
+                  if (_profile.history.length > _recentLimit)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                HistoryScreen(history: _profile.history),
                           ),
-                          subtitle: Text(_formatDate(record.date)),
-                          children: [
-                            if (record.note.isNotEmpty)
-                              ListTile(
-                                dense: true,
-                                leading: const Icon(Icons.edit_note),
-                                title: Text(record.note),
-                              ),
-                            ...record.exercises.map(
-                              (exercise) => ListTile(
-                                dense: true,
-                                title: Text(exercise.name),
-                                subtitle: Text(
-                                  exercise.sets
-                                      .map(
-                                        (set) =>
-                                            '${set.reps} rep · ${set.weight} kg',
-                                      )
-                                      .join('  /  '),
-                                ),
-                              ),
-                            ),
-                          ],
+                        ),
+                        icon: const Icon(Icons.history),
+                        label: Text(
+                          'Ver todo el historial (${_profile.history.length})',
                         ),
                       ),
+                    ),
+                ],
               ],
             ),
           ),
         ),
+        if (exerciseProgress.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Por ejercicio',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Toca un ejercicio para ver su evolución.',
+                    style: TextStyle(color: Colors.grey.shade700),
+                  ),
+                  const SizedBox(height: 8),
+                  ...exerciseProgress.map(
+                    (progress) => ExerciseProgressTile(progress: progress),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 14),
         Card(
           child: ListTile(
@@ -1256,6 +1088,4 @@ class _HomeScreenState extends State<HomeScreen> {
     final now = DateTime.now();
     return '${days[now.weekday - 1][0].toUpperCase()}${days[now.weekday - 1].substring(1)}, ${now.day} de ${months[now.month - 1]}';
   }
-
-  String _formatDate(DateTime date) => '${date.day}/${date.month}/${date.year}';
 }
