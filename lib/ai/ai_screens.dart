@@ -595,6 +595,13 @@ class _RoutineAiScreenState extends State<RoutineAiScreen> {
             const SizedBox(height: 4),
             Text(proposal.summary),
           ],
+          if (proposal.days.length > 1) ...[
+            const SizedBox(height: 4),
+            Text(
+              '${proposal.days.length} días que se alternan',
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ],
           if (proposal.reason.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
@@ -603,20 +610,30 @@ class _RoutineAiScreenState extends State<RoutineAiScreen> {
             ),
           ],
           const SizedBox(height: 8),
-          ...proposal.exercises.map(
-            (exercise) => ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(exercise.icon, size: 20),
-              title: Text(exercise.name),
-              subtitle: Text(exercise.detail),
-              trailing: IconButton(
-                tooltip: 'Cómo se hace',
-                icon: const Icon(Icons.info_outline),
-                onPressed: () => showExerciseGuide(context, exercise.name),
+          for (final day in proposal.days) ...[
+            if (proposal.days.length > 1)
+              Padding(
+                padding: const EdgeInsets.only(top: 10, bottom: 2),
+                child: Text(
+                  day.name,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ...day.exercises.map(
+              (exercise) => ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(exercise.icon, size: 20),
+                title: Text(exercise.name),
+                subtitle: Text(exercise.detail),
+                trailing: IconButton(
+                  tooltip: 'Cómo se hace',
+                  icon: const Icon(Icons.info_outline),
+                  onPressed: () => showExerciseGuide(context, exercise.name),
+                ),
               ),
             ),
-          ),
+          ],
           if (proposal.dropped.isNotEmpty)
             Text(
               'Se han quitado ejercicios que la app no tiene: '

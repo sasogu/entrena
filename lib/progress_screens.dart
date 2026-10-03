@@ -28,7 +28,9 @@ class WorkoutRecordTile extends StatelessWidget {
     tilePadding: EdgeInsets.zero,
     leading: const CircleAvatar(child: Icon(Icons.check)),
     title: Text(
-      record.routineName,
+      record.dayName.isEmpty
+          ? record.routineName
+          : '${record.routineName} · ${record.dayName}',
       style: const TextStyle(fontWeight: FontWeight.w700),
     ),
     subtitle: Text(formatDate(record.date)),

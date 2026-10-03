@@ -61,11 +61,11 @@ void main() {
     expect(find.text('Hockey línea'), findsOneWidget);
     final hockey = tester.getTopLeft(find.text('Hockey línea')).dy;
     await tester.scrollUntilVisible(
-      find.text('Cuerpo completo B'),
+      find.text('Fuerza con barra'),
       300,
       scrollable: find.byType(Scrollable).first,
     );
-    final generic = tester.getTopLeft(find.text('Cuerpo completo B')).dy;
+    final generic = tester.getTopLeft(find.text('Fuerza con barra')).dy;
     expect(find.text('Hockey línea'), findsOneWidget);
     expect(hockey, lessThan(generic + 1000));
     expect(tester.getTopLeft(find.text('Hockey línea')).dy, lessThan(generic));

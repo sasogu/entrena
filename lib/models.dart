@@ -2,20 +2,28 @@ import 'package:flutter/material.dart';
 
 class Profile {
   Profile(this.name, {this.workouts = 0, this.lastWorkout})
-    : exercises = List<Exercise>.of(defaultRoutine);
+    : days = routineOptions.first.copyDays();
   final String name;
   int workouts;
   DateTime? lastWorkout;
-  List<Exercise> exercises;
+
+  /// Sesiones distintas de la rutina, que se hacen en orden y se repiten.
+  List<RoutineDay> days;
+
+  /// Día que toca la próxima vez (índice en [days]).
+  int nextDay = 0;
   List<WorkoutRecord> history = [];
   String goal = 'Empezar a entrenar';
-  String routineName = 'Cuerpo completo A';
+  String routineName = routineOptions.first.name;
+
+  int get safeNextDay => days.isEmpty ? 0 : nextDay.clamp(0, days.length - 1);
 
   Map<String, dynamic> toJson() => {
     'name': name,
     'workouts': workouts,
     'lastWorkout': lastWorkout?.toIso8601String(),
-    'exercises': exercises.map((exercise) => exercise.toJson()).toList(),
+    'days': days.map((day) => day.toJson()).toList(),
+    'nextDay': nextDay,
     'history': history.map((record) => record.toJson()).toList(),
     'goal': goal,
     'routineName': routineName,
@@ -29,12 +37,24 @@ class Profile {
           ? null
           : DateTime.tryParse(json['lastWorkout'] as String),
     );
+    final days = json['days'] as List<dynamic>?;
+    // Formato anterior: una sola lista de ejercicios.
     final exercises = json['exercises'] as List<dynamic>?;
-    if (exercises != null) {
-      profile.exercises = exercises
-          .map((item) => Exercise.fromJson(item as Map<String, dynamic>))
+    if (days != null && days.isNotEmpty) {
+      profile.days = days
+          .map((item) => RoutineDay.fromJson(item as Map<String, dynamic>))
           .toList();
+    } else if (exercises != null) {
+      profile.days = [
+        RoutineDay(
+          'Día A',
+          exercises
+              .map((item) => Exercise.fromJson(item as Map<String, dynamic>))
+              .toList(),
+        ),
+      ];
     }
+    profile.nextDay = (json['nextDay'] as num?)?.toInt() ?? 0;
     final history = json['history'] as List<dynamic>?;
     if (history != null) {
       profile.history = history
@@ -46,6 +66,30 @@ class Profile {
     return profile;
   }
 }
+
+/// Una sesión de la rutina (por ejemplo «Día A · Torso»).
+class RoutineDay {
+  RoutineDay(this.name, List<Exercise> exercises)
+    : exercises = List.of(exercises);
+  String name;
+  final List<Exercise> exercises;
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'exercises': exercises.map((exercise) => exercise.toJson()).toList(),
+  };
+
+  factory RoutineDay.fromJson(Map<String, dynamic> json) => RoutineDay(
+    json['name'] as String? ?? 'Día',
+    (json['exercises'] as List<dynamic>? ?? const [])
+        .map((item) => Exercise.fromJson(item as Map<String, dynamic>))
+        .toList(),
+  );
+}
+
+/// Nombre por defecto del día [index]: «Día A», «Día B»…
+String dayLetterName(int index) =>
+    'Día ${String.fromCharCode(65 + index.clamp(0, 25))}';
 
 class Exercise {
   const Exercise(this.name, this.detail, this.iconIndex);
@@ -77,83 +121,175 @@ const exerciseIcons = [
   Icons.directions_run,
 ];
 
-const defaultRoutine = [
-  Exercise('Sentadilla goblet', '3 series · 8–10 repeticiones', 0),
-  Exercise('Press de pecho en máquina', '3 series · 8–12 repeticiones', 1),
-  Exercise('Jalón al pecho', '3 series · 10–12 repeticiones', 2),
-  Exercise(
-    'Peso muerto rumano con mancuernas',
-    '2 series · 10 repeticiones',
-    3,
-  ),
-  Exercise('Plancha', '3 series · 20–30 segundos', 4),
-];
+/// Plantilla de un día dentro de una rutina de ejemplo.
+class TemplateDay {
+  const TemplateDay(this.name, this.exercises);
+  final String name;
+  final List<Exercise> exercises;
+}
 
 class RoutineOption {
   const RoutineOption({
     required this.name,
     required this.summary,
-    required this.exercises,
+    required this.days,
     this.sport,
+    this.fixedDetails = false,
   });
   final String name;
   final String summary;
-  final List<Exercise> exercises;
+  final List<TemplateDay> days;
 
   /// Deporte al que va dirigida. Solo se muestra con objetivos de ese deporte
   /// y conserva sus series y repeticiones.
   final String? sport;
+
+  /// Si conserva sus series y repeticiones en lugar de ajustarlas al objetivo.
+  final bool fixedDetails;
+
+  bool get keepsDetails => fixedDetails || sport != null;
+
+  /// Todos los ejercicios, de todos los días.
+  List<Exercise> get exercises => [for (final day in days) ...day.exercises];
+
+  List<RoutineDay> copyDays() => [
+    for (final day in days) RoutineDay(day.name, day.exercises),
+  ];
 }
 
 const routineOptions = [
   RoutineOption(
-    name: 'Cuerpo completo A',
-    summary: 'Máquinas y movimientos básicos · sencilla para empezar',
-    exercises: defaultRoutine,
+    name: 'Cuerpo completo',
+    summary:
+        'Dos sesiones de máquinas y movimientos básicos que se alternan · sencilla para empezar',
+    days: [
+      TemplateDay('Día A', [
+        Exercise('Sentadilla goblet', '3 series · 8–10 repeticiones', 0),
+        Exercise(
+          'Press de pecho en máquina',
+          '3 series · 8–12 repeticiones',
+          1,
+        ),
+        Exercise('Jalón al pecho', '3 series · 10–12 repeticiones', 2),
+        Exercise(
+          'Peso muerto rumano con mancuernas',
+          '2 series · 10 repeticiones',
+          3,
+        ),
+        Exercise('Plancha', '3 series · 20–30 segundos', 4),
+      ]),
+      TemplateDay('Día B', [
+        Exercise('Prensa de piernas', '3 series · 8–12 repeticiones', 0),
+        Exercise(
+          'Press inclinado en máquina',
+          '3 series · 8–12 repeticiones',
+          1,
+        ),
+        Exercise('Remo sentado en polea', '3 series · 10–12 repeticiones', 2),
+        Exercise('Puente de glúteos', '2 series · 10–12 repeticiones', 3),
+        Exercise('Dead bug', '3 series · 8 por lado', 4),
+      ]),
+    ],
   ),
   RoutineOption(
-    name: 'Cuerpo completo B',
-    summary: 'Alternativa con otros movimientos y un ritmo tranquilo',
-    exercises: [
-      Exercise('Prensa de piernas', '3 series · 8–12 repeticiones', 0),
-      Exercise('Press inclinado en máquina', '3 series · 8–12 repeticiones', 1),
-      Exercise('Remo sentado en polea', '3 series · 10–12 repeticiones', 2),
-      Exercise('Puente de glúteos', '2 series · 10–12 repeticiones', 3),
-      Exercise('Dead bug', '3 series · 8 por lado', 4),
+    name: 'Fuerza con barra',
+    summary:
+        'Los grandes básicos con barra en dos sesiones que se alternan · pocas repeticiones y más peso',
+    fixedDetails: true,
+    days: [
+      TemplateDay('Día A', [
+        Exercise('Sentadilla con barra', '3 series · 5 repeticiones', 0),
+        Exercise('Press de banca', '3 series · 5 repeticiones', 1),
+        Exercise('Remo sentado en polea', '3 series · 8 repeticiones', 2),
+        Exercise('Plancha', '2 series · 30 segundos', 4),
+      ]),
+      TemplateDay('Día B', [
+        Exercise('Peso muerto', '3 series · 5 repeticiones', 3),
+        Exercise('Press militar', '3 series · 5 repeticiones', 1),
+        Exercise('Dominadas', '3 series · 5–8 repeticiones', 2),
+        Exercise('Plancha lateral', '2 series · 20–30 segundos por lado', 4),
+      ]),
+    ],
+  ),
+  RoutineOption(
+    name: 'Torso / Pierna',
+    summary:
+        'Una sesión de torso y otra de pierna que se alternan · para 3–4 días por semana',
+    days: [
+      TemplateDay('Torso', [
+        Exercise('Press de banca', '3 series · 8–10 repeticiones', 1),
+        Exercise('Jalón al pecho', '3 series · 8–10 repeticiones', 2),
+        Exercise('Press militar', '3 series · 8–10 repeticiones', 1),
+        Exercise('Remo sentado en polea', '3 series · 10–12 repeticiones', 2),
+        Exercise('Curl de bíceps', '2 series · 10–12 repeticiones', 2),
+        Exercise(
+          'Extensión de tríceps en polea',
+          '2 series · 10–12 repeticiones',
+          1,
+        ),
+      ]),
+      TemplateDay('Pierna', [
+        Exercise('Sentadilla con barra', '3 series · 8–10 repeticiones', 0),
+        Exercise(
+          'Peso muerto rumano con mancuernas',
+          '3 series · 8–10 repeticiones',
+          3,
+        ),
+        Exercise('Prensa de piernas', '3 series · 10–12 repeticiones', 0),
+        Exercise('Curl femoral', '3 series · 10–12 repeticiones', 3),
+        Exercise('Plancha', '3 series · 30 segundos', 4),
+      ]),
     ],
   ),
   RoutineOption(
     name: 'Cardio y fuerza',
     summary: 'Calentamiento en cinta, máquinas básicas y elíptica al final',
-    exercises: [
-      Exercise('Cinta de correr', '10 minutos caminando a ritmo vivo', 5),
-      Exercise('Prensa de piernas', '3 series · 10–12 repeticiones', 0),
-      Exercise('Press de pecho en máquina', '3 series · 10–12 repeticiones', 1),
-      Exercise('Remo sentado en polea', '3 series · 10–12 repeticiones', 2),
-      Exercise('Elíptica', '15–20 minutos a esfuerzo moderado', 5),
+    days: [
+      TemplateDay('Día A', [
+        Exercise('Cinta de correr', '10 minutos caminando a ritmo vivo', 5),
+        Exercise('Prensa de piernas', '3 series · 10–12 repeticiones', 0),
+        Exercise(
+          'Press de pecho en máquina',
+          '3 series · 10–12 repeticiones',
+          1,
+        ),
+        Exercise('Remo sentado en polea', '3 series · 10–12 repeticiones', 2),
+        Exercise('Elíptica', '15–20 minutos a esfuerzo moderado', 5),
+      ]),
     ],
   ),
   RoutineOption(
     name: 'Hockey línea',
     summary:
-        'Empuje lateral, piernas a una pierna, aductores y estabilidad del tronco',
+        'Empuje lateral, piernas a una pierna, aductores y estabilidad del tronco en dos sesiones',
     sport: 'Hockey línea',
-    exercises: [
-      Exercise('Bicicleta estática', '8 minutos subiendo el ritmo', 5),
-      Exercise('Saltos de patinador', '3 series · 6 por lado', 0),
-      Exercise('Sentadilla búlgara', '3 series · 8 por pierna', 0),
-      Exercise('Zancada lateral', '3 series · 8 por lado', 0),
-      Exercise(
-        'Peso muerto rumano con mancuernas',
-        '3 series · 8 repeticiones',
-        3,
-      ),
-      Exercise(
-        'Plancha de Copenhague',
-        '2 series · 15–20 segundos por lado',
-        4,
-      ),
-      Exercise('Pallof press', '3 series · 10 por lado', 4),
+    days: [
+      TemplateDay('Día A · Potencia', [
+        Exercise('Bicicleta estática', '8 minutos subiendo el ritmo', 5),
+        Exercise('Saltos de patinador', '3 series · 6 por lado', 0),
+        Exercise('Sentadilla búlgara', '3 series · 8 por pierna', 0),
+        Exercise('Zancada lateral', '3 series · 8 por lado', 0),
+        Exercise(
+          'Peso muerto rumano con mancuernas',
+          '3 series · 8 repeticiones',
+          3,
+        ),
+        Exercise(
+          'Plancha de Copenhague',
+          '2 series · 15–20 segundos por lado',
+          4,
+        ),
+        Exercise('Pallof press', '3 series · 10 por lado', 4),
+      ]),
+      TemplateDay('Día B · Fuerza y prevención', [
+        Exercise('Remo ergómetro', '8 minutos subiendo el ritmo', 5),
+        Exercise('Sentadilla con barra', '3 series · 5–6 repeticiones', 0),
+        Exercise('Hip thrust', '3 series · 8 repeticiones', 3),
+        Exercise('Aductores en máquina', '3 series · 12 repeticiones', 0),
+        Exercise('Abductores en máquina', '3 series · 12 repeticiones', 3),
+        Exercise('Leñador en polea', '3 series · 10 por lado', 4),
+        Exercise('Plancha lateral', '2 series · 30 segundos por lado', 4),
+      ]),
     ],
   ),
 ];
@@ -253,17 +389,22 @@ class WorkoutRecord {
     required this.routineName,
     required this.exercises,
     this.note = '',
+    this.dayName = '',
   });
   final DateTime date;
   final String routineName;
   final List<LoggedExercise> exercises;
   final String note;
 
+  /// Día de la rutina que se hizo; vacío si la rutina tiene un solo día.
+  final String dayName;
+
   Map<String, dynamic> toJson() => {
     'date': date.toIso8601String(),
     'routineName': routineName,
     'exercises': exercises.map((exercise) => exercise.toJson()).toList(),
     if (note.isNotEmpty) 'note': note,
+    if (dayName.isNotEmpty) 'dayName': dayName,
   };
 
   factory WorkoutRecord.fromJson(Map<String, dynamic> json) => WorkoutRecord(
@@ -273,5 +414,6 @@ class WorkoutRecord {
         .map((item) => LoggedExercise.fromJson(item as Map<String, dynamic>))
         .toList(),
     note: json['note'] as String? ?? '',
+    dayName: json['dayName'] as String? ?? '',
   );
 }

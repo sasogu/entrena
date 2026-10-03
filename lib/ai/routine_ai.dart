@@ -34,18 +34,29 @@ class RoutineRequest {
   final String? history;
 }
 
+class ProposalDay {
+  const ProposalDay(this.name, this.exercises);
+  final String name;
+  final List<Exercise> exercises;
+}
+
 class RoutineProposal {
   const RoutineProposal({
     required this.name,
     required this.summary,
     required this.reason,
-    required this.exercises,
+    required this.days,
     required this.dropped,
   });
   final String name;
   final String summary;
   final String reason;
-  final List<Exercise> exercises;
+
+  /// Sesiones distintas que se alternan.
+  final List<ProposalDay> days;
+
+  /// Todos los ejercicios, de todos los días.
+  List<Exercise> get exercises => [for (final day in days) ...day.exercises];
 
   /// Ejercicios que la IA propuso pero no están en el catálogo de la app.
   final List<String> dropped;
@@ -72,7 +83,14 @@ Eres un entrenador personal titulado. Propones rutinas de gimnasio seguras, senc
 
 Reglas:
 - Propón 3 rutinas distintas entre sí (por ejemplo, más máquinas o más peso libre, más volumen o más intensidad).
-- Cada rutina es UNA sesión de cuerpo completo que se repite los días indicados, de 4 a 7 ejercicios y ajustada al tiempo disponible.
+- Cada rutina se reparte en sesiones distintas que se alternan en orden y se complementan. Número de sesiones según los días por semana:
+  · 1 día: 1 sesión de cuerpo completo.
+  · 2 días: 2 sesiones de cuerpo completo con ejercicios distintos.
+  · 3 días: 3 sesiones de cuerpo completo distintas, o empuje / tirón / pierna.
+  · 4 días: torso / pierna (2 sesiones que se repiten) o 4 sesiones distintas.
+  · 5 o 6 días: 2 o 3 sesiones (torso / pierna o empuje / tirón / pierna) que se repiten.
+- Las sesiones se complementan: reparte los grupos musculares para que cada uno se trabaje unas dos veces por semana, no repitas el mismo ejercicio principal en sesiones seguidas y reparte el cardio y el trabajo de tronco.
+- Cada sesión tiene de 4 a 7 ejercicios y se ajusta al tiempo disponible. Ponle un nombre corto que diga qué trabaja (por ejemplo "Día A · Pierna" o "Torso").
 - Usa SOLO ejercicios de este catálogo, con el nombre escrito exactamente igual:
 $catalog
 - Respeta el material disponible y las limitaciones. Ante dolor o lesión, elige opciones más suaves y recomienda consultar a un profesional; no hagas diagnósticos.
@@ -82,7 +100,7 @@ $catalog
 - Si hay historial, tenlo en cuenta para la progresión.
 
 Responde solo con un objeto JSON válido, sin texto antes ni después, con este formato:
-{"propuestas":[{"nombre":"Nombre corto","resumen":"Una frase","por_que":"Dos o tres frases sobre en qué se diferencia y para quién es mejor","ejercicios":[{"nombre":"Nombre exacto del catálogo","series":3,"repeticiones":"8–10","nota":"Opcional, muy breve"}]}]}''';
+{"propuestas":[{"nombre":"Nombre corto","resumen":"Una frase","por_que":"Dos o tres frases sobre en qué se diferencia, cómo se reparten los días y para quién es mejor","dias":[{"nombre":"Día A · Pierna","ejercicios":[{"nombre":"Nombre exacto del catálogo","series":3,"repeticiones":"8–10","nota":"Opcional, muy breve"}]}]}]}''';
 }
 
 String buildUserPrompt(RoutineRequest request) => [
@@ -120,38 +138,32 @@ List<RoutineProposal> parseProposals(String text) {
   }
   final proposals = <RoutineProposal>[];
   for (final item in raw.whereType<Map<String, dynamic>>()) {
-    final exercises = <Exercise>[];
     final dropped = <String>[];
-    for (final entry
-        in (item['ejercicios'] as List? ?? const [])
-            .whereType<Map<String, dynamic>>()) {
-      final name = '${entry['nombre'] ?? ''}'.trim();
-      final guide = findExerciseGuide(name);
-      if (guide == null) {
-        if (name.isNotEmpty) dropped.add(name);
-        continue;
-      }
-      if (exercises.any((exercise) => exercise.name == guide.name)) continue;
-      final sets = entry['series'];
-      final reps = '${entry['repeticiones'] ?? ''}'.trim();
-      final note = '${entry['nota'] ?? ''}'.trim();
-      final detail = [
-        if (sets != null && !guide.cardio) '$sets series',
-        if (reps.isNotEmpty)
-          RegExp(r'[a-zA-Z]').hasMatch(reps) ? reps : '$reps repeticiones',
-        if (note.isNotEmpty) note,
-      ].join(' · ');
-      exercises.add(
-        Exercise(guide.name, detail, exerciseIconIndex(guide.name)),
+    // Formato con días; si la IA devuelve una sola lista, es un único día.
+    final rawDays = item['dias'] is List
+        ? (item['dias'] as List).whereType<Map<String, dynamic>>().toList()
+        : [
+            {'nombre': 'Día A', 'ejercicios': item['ejercicios']},
+          ];
+    final days = <ProposalDay>[];
+    for (final rawDay in rawDays) {
+      final exercises = _parseExercises(rawDay['ejercicios'], dropped);
+      if (exercises.length < 3) continue;
+      final name = '${rawDay['nombre'] ?? ''}'.trim();
+      days.add(
+        ProposalDay(
+          name.isEmpty ? dayLetterName(days.length) : name,
+          exercises,
+        ),
       );
     }
-    if (exercises.length < 3) continue;
+    if (days.isEmpty) continue;
     proposals.add(
       RoutineProposal(
         name: '${item['nombre'] ?? 'Propuesta'}'.trim(),
         summary: '${item['resumen'] ?? ''}'.trim(),
         reason: '${item['por_que'] ?? ''}'.trim(),
-        exercises: exercises,
+        days: days,
         dropped: dropped,
       ),
     );
@@ -163,6 +175,33 @@ List<RoutineProposal> parseProposals(String text) {
     );
   }
   return proposals;
+}
+
+/// Ejercicios válidos de una sesión; apunta en [dropped] los que no están en
+/// el catálogo.
+List<Exercise> _parseExercises(Object? raw, List<String> dropped) {
+  final exercises = <Exercise>[];
+  for (final entry
+      in (raw is List ? raw : const []).whereType<Map<String, dynamic>>()) {
+    final name = '${entry['nombre'] ?? ''}'.trim();
+    final guide = findExerciseGuide(name);
+    if (guide == null) {
+      if (name.isNotEmpty && !dropped.contains(name)) dropped.add(name);
+      continue;
+    }
+    if (exercises.any((exercise) => exercise.name == guide.name)) continue;
+    final sets = entry['series'];
+    final reps = '${entry['repeticiones'] ?? ''}'.trim();
+    final note = '${entry['nota'] ?? ''}'.trim();
+    final detail = [
+      if (sets != null && !guide.cardio) '$sets series',
+      if (reps.isNotEmpty)
+        RegExp(r'[a-zA-Z]').hasMatch(reps) ? reps : '$reps repeticiones',
+      if (note.isNotEmpty) note,
+    ].join(' · ');
+    exercises.add(Exercise(guide.name, detail, exerciseIconIndex(guide.name)));
+  }
+  return exercises;
 }
 
 Future<List<RoutineProposal>> requestProposals({

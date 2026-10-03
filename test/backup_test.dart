@@ -39,7 +39,11 @@ void main() {
       restored.first.history.first.exercises.single.sets.single.weight,
       62.5,
     );
-    expect(restored.first.exercises.length, original.first.exercises.length);
+    expect(restored.first.days.length, original.first.days.length);
+    expect(
+      restored.first.days.first.exercises.length,
+      original.first.days.first.exercises.length,
+    );
     expect(
       jsonEncode(restored.map((p) => p.toJson()).toList()),
       jsonEncode(original.map((p) => p.toJson()).toList()),

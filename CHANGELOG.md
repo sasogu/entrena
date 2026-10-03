@@ -2,6 +2,20 @@
 
 Este archivo recoge los cambios relevantes de cada versión. Sigue el formato de [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y versionado semántico.
 
+## 0.4.0 - 2026-10-03 (prueba)
+
+### Añadido
+
+- Rutinas de varios días que se alternan y se complementan (por ejemplo, Día A / Día B o Torso / Pierna). Hoy muestra «Hoy toca: …» con el día siguiente de la secuencia, sin depender del día de la semana; se puede elegir otro día con los botones de arriba.
+- Personaliza tu rutina por días: añadir, renombrar y quitar días, y editar los ejercicios de cada uno.
+- Rutinas de ejemplo con días: «Cuerpo completo» (A/B), «Fuerza con barra» (A: sentadilla con barra, press de banca, remo; B: peso muerto, press militar, dominadas), «Torso / Pierna», «Cardio y fuerza» (1 día) y «Hockey línea» (A: potencia; B: fuerza y prevención).
+- La IA reparte las sesiones según los días por semana (1: cuerpo completo; 2: dos de cuerpo completo; 3: tres distintas o empuje/tirón/pierna; 4 o más: torso/pierna…) para que se complementen.
+- El historial indica qué día de la rutina se hizo.
+
+### Cambiado
+
+- «Cuerpo completo A» y «B» pasan a ser los dos días de «Cuerpo completo».
+
 ## 0.3.2 - 2026-10-03 (prueba)
 
 ### Añadido

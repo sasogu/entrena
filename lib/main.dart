@@ -62,7 +62,23 @@ class _HomeScreenState extends State<HomeScreen> {
   String _sessionNote = '';
   bool _loaded = false;
 
+  /// Día de la rutina que se está viendo en Hoy y en Personaliza.
+  int _day = 0;
+
   Profile get _profile => _profiles[_selected];
+
+  RoutineDay get _currentDay {
+    if (_profile.days.isEmpty) {
+      _profile.days.add(RoutineDay(dayLetterName(0), []));
+    }
+    return _profile.days[_day.clamp(0, _profile.days.length - 1)];
+  }
+
+  List<Exercise> get _exercises => _currentDay.exercises;
+
+  bool get _multiDay => _profile.days.length > 1;
+
+  String _dayTitle(int index) => _profile.days[index].name;
 
   @override
   void initState() {
@@ -87,6 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
       _selected = selected.clamp(0, _profiles.length - 1).toInt();
+      _day = _profile.safeNextDay;
       _loaded = true;
     });
   }
@@ -129,6 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _profiles.add(Profile(name));
       _selected = _profiles.length - 1;
+      _day = _profile.safeNextDay;
       _sessionSets.clear();
       _sessionNote = '';
     });
@@ -143,6 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     setState(() {
       _selected = index;
+      _day = _profile.safeNextDay;
       _sessionSets.clear();
       _sessionNote = '';
     });
@@ -293,6 +312,7 @@ class _HomeScreenState extends State<HomeScreen> {
       } else {
         _profiles = mergeProfiles(_profiles, imported);
       }
+      _day = _profile.safeNextDay;
       _sessionSets.clear();
       _sessionNote = '';
     });
@@ -370,7 +390,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _selectRoutine(RoutineOption option) async {
     setState(() {
       _profile.routineName = option.name;
-      _profile.exercises = List.of(option.exercises);
+      _profile.days = option.copyDays();
+      _profile.nextDay = 0;
+      _day = 0;
       _sessionSets.clear();
     });
     await _save();
@@ -387,7 +409,9 @@ class _HomeScreenState extends State<HomeScreen> {
       RoutineOption(
         name: proposal.name,
         summary: proposal.summary,
-        exercises: proposal.exercises,
+        days: [
+          for (final day in proposal.days) TemplateDay(day.name, day.exercises),
+        ],
       ),
     );
   }
@@ -440,24 +464,27 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
     return options
         .map(
-          (option) => option.sport != null
+          (option) => option.keepsDetails
               ? option
               : RoutineOption(
                   name: option.name,
                   summary: '${option.summary} · ${_profile.goal.toLowerCase()}',
-                  exercises: option.exercises
-                      .map(
-                        (exercise) => Exercise(
-                          exercise.name,
-                          exercise.name == 'Plancha' ||
-                                  exercise.name == 'Dead bug' ||
-                                  isCardioExercise(exercise.name)
-                              ? exercise.detail
-                              : prescription,
-                          exercise.iconIndex,
-                        ),
-                      )
-                      .toList(),
+                  days: [
+                    for (final day in option.days)
+                      TemplateDay(day.name, [
+                        for (final exercise in day.exercises)
+                          Exercise(
+                            exercise.name,
+                            exercise.name == 'Plancha' ||
+                                    exercise.name == 'Plancha lateral' ||
+                                    exercise.name == 'Dead bug' ||
+                                    isCardioExercise(exercise.name)
+                                ? exercise.detail
+                                : prescription,
+                            exercise.iconIndex,
+                          ),
+                      ]),
+                  ],
                 ),
         )
         .toList();
@@ -473,11 +500,12 @@ class _HomeScreenState extends State<HomeScreen> {
         WorkoutRecord(
           date: now,
           routineName: _profile.routineName,
+          dayName: _multiDay ? _currentDay.name : '',
           exercises: _sessionSets.entries
               .where((entry) => entry.value.isNotEmpty)
               .map(
                 (entry) => LoggedExercise(
-                  name: _profile.exercises[entry.key].name,
+                  name: _exercises[entry.key].name,
                   sets: List.of(entry.value),
                 ),
               )
@@ -485,6 +513,8 @@ class _HomeScreenState extends State<HomeScreen> {
           note: _sessionNote,
         ),
       );
+      _profile.nextDay = (_day + 1) % _profile.days.length;
+      _day = _profile.nextDay;
       _sessionSets.clear();
       _sessionNote = '';
       _tab = 2;
@@ -531,7 +561,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _logSet(int index) async {
-    final exercise = _profile.exercises[index];
+    final exercise = _exercises[index];
     if (isCardioExercise(exercise.name)) return _logCardio(index);
     final repsController = TextEditingController();
     final weightController = TextEditingController();
@@ -586,7 +616,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _logCardio(int index) async {
-    final exercise = _profile.exercises[index];
+    final exercise = _exercises[index];
     final minutesController = TextEditingController();
     final distanceController = TextEditingController();
     double? parse(TextEditingController c) =>
@@ -650,7 +680,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _editExercise([int? index]) async {
-    final existing = index == null ? null : _profile.exercises[index];
+    final existing = index == null ? null : _exercises[index];
     final nameController = TextEditingController(text: existing?.name ?? '');
     final detailController = TextEditingController(
       text: existing?.detail ?? '3 series · 8–12 repeticiones',
@@ -702,9 +732,9 @@ class _HomeScreenState extends State<HomeScreen> {
     if (result == null || !mounted) return;
     setState(() {
       if (index == null) {
-        _profile.exercises.add(result);
+        _exercises.add(result);
       } else {
-        _profile.exercises[index] = result;
+        _exercises[index] = result;
       }
       _profile.routineName = 'Mi rutina personalizada';
       _sessionSets.clear();
@@ -712,8 +742,82 @@ class _HomeScreenState extends State<HomeScreen> {
     await _save();
   }
 
+  Future<void> _addDay() async {
+    setState(() {
+      _profile.days.add(RoutineDay(dayLetterName(_profile.days.length), []));
+      _day = _profile.days.length - 1;
+      _profile.routineName = 'Mi rutina personalizada';
+      _sessionSets.clear();
+    });
+    await _save();
+  }
+
+  Future<void> _renameDay() async {
+    final controller = TextEditingController(text: _currentDay.name);
+    final name = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Nombre del día'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 40,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: const InputDecoration(hintText: 'Por ejemplo: Torso'),
+          onSubmitted: (value) => Navigator.pop(context, value.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+    if (name == null || name.isEmpty || !mounted) return;
+    setState(() => _currentDay.name = name);
+    await _save();
+  }
+
+  Future<void> _removeDay() async {
+    final day = _currentDay;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('¿Quitar «${day.name}»?'),
+        content: Text(
+          'Se quitarán sus ${day.exercises.length} ejercicios de la rutina. '
+          'Tu historial no se toca.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Quitar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() {
+      _profile.days.remove(day);
+      _day = _day.clamp(0, _profile.days.length - 1);
+      _profile.nextDay = _profile.safeNextDay;
+      _profile.routineName = 'Mi rutina personalizada';
+      _sessionSets.clear();
+    });
+    await _save();
+  }
+
   Future<void> _removeExercise(int index) async {
-    final exercise = _profile.exercises[index];
+    final exercise = _exercises[index];
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -733,7 +837,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     if (confirmed != true || !mounted) return;
     setState(() {
-      _profile.exercises.removeAt(index);
+      _exercises.removeAt(index);
       _profile.routineName = 'Mi rutina personalizada';
       _sessionSets.clear();
     });
@@ -907,12 +1011,14 @@ class _HomeScreenState extends State<HomeScreen> {
       Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'Entrenamiento A',
-            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 19),
+          Expanded(
+            child: Text(
+              _multiDay ? 'Hoy toca: ${_currentDay.name}' : 'Tu entrenamiento',
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 19),
+            ),
           ),
           Text(
-            '${_sessionSets.length}/${_profile.exercises.length}',
+            '${_sessionSets.length}/${_exercises.length}',
             style: TextStyle(
               color: Colors.grey.shade600,
               fontWeight: FontWeight.w600,
@@ -920,8 +1026,23 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+      if (_multiDay) ...[
+        const SizedBox(height: 8),
+        _daySelector(lockedWhileLogging: true),
+      ],
       const SizedBox(height: 12),
-      ..._profile.exercises.asMap().entries.map(
+      if (_exercises.isEmpty)
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: const Text('Este día no tiene ejercicios'),
+            subtitle: const Text(
+              'Añádelos en Rutinas → Personaliza tu rutina.',
+            ),
+            onTap: () => setState(() => _tab = 1),
+          ),
+        ),
+      ..._exercises.asMap().entries.map(
         (entry) => _exerciseTile(entry.key, entry.value),
       ),
       Card(
@@ -958,6 +1079,34 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     ],
   );
+
+  /// Chips para elegir el día de la rutina. En Hoy se bloquea mientras hay
+  /// series apuntadas, para no mezclar ejercicios de días distintos.
+  Widget _daySelector({bool lockedWhileLogging = false}) {
+    final locked = lockedWhileLogging && _sessionSets.isNotEmpty;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          children: [
+            for (var i = 0; i < _profile.days.length; i++)
+              ChoiceChip(
+                label: Text(_dayTitle(i)),
+                selected: i == _day.clamp(0, _profile.days.length - 1),
+                onSelected: locked ? null : (_) => setState(() => _day = i),
+              ),
+          ],
+        ),
+        if (locked)
+          Text(
+            'Guarda o borra las series de hoy para cambiar de día.',
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          ),
+      ],
+    );
+  }
 
   Widget _heroCard() => Container(
     padding: const EdgeInsets.all(20),
@@ -1011,7 +1160,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(width: 18),
             _heroMetric(
               Icons.fitness_center,
-              '${_profile.exercises.length} ejercicios',
+              '${_exercises.length} ejercicios',
             ),
           ],
         ),
@@ -1091,6 +1240,50 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// Lista de días con sus ejercicios, para las tarjetas de rutina.
+  Widget _daysSummary(List<(String, List<Exercise>)> days) {
+    if (days.every((day) => day.$2.isEmpty)) {
+      return const Text(
+        'Sin ejercicios. Añade alguno abajo o elige una rutina.',
+        style: TextStyle(fontSize: 12),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (days.length > 1)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Text(
+              '${days.length} días que se alternan',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+            ),
+          ),
+        for (final (name, exercises) in days)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 3),
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  if (days.length > 1)
+                    TextSpan(
+                      text: '$name: ',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  TextSpan(
+                    text: exercises
+                        .map((exercise) => exercise.name)
+                        .join(' · '),
+                  ),
+                ],
+              ),
+              style: const TextStyle(fontSize: 12, height: 1.4),
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _currentRoutineCard() {
     final isTemplate = routineOptions.any(
       (option) => option.name == _profile.routineName,
@@ -1127,14 +1320,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             const SizedBox(height: 8),
-            Text(
-              _profile.exercises.isEmpty
-                  ? 'Sin ejercicios. Añade alguno abajo o elige una rutina.'
-                  : _profile.exercises
-                        .map((exercise) => exercise.name)
-                        .join(' · '),
-              style: const TextStyle(fontSize: 12, height: 1.4),
-            ),
+            _daysSummary([
+              for (final day in _profile.days) (day.name, day.exercises),
+            ]),
             if (!isTemplate)
               Padding(
                 padding: const EdgeInsets.only(top: 6),
@@ -1224,10 +1412,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextStyle(color: Colors.grey.shade700),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  option.exercises.map((exercise) => exercise.name).join(' · '),
-                  style: const TextStyle(fontSize: 12, height: 1.4),
-                ),
+                _daysSummary([
+                  for (final day in option.days) (day.name, day.exercises),
+                ]),
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
@@ -1281,7 +1468,29 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      ..._profile.exercises.asMap().entries.map(
+      _daySelector(),
+      Row(
+        children: [
+          TextButton.icon(
+            onPressed: _addDay,
+            icon: const Icon(Icons.add_box_outlined),
+            label: const Text('Añadir día'),
+          ),
+          if (_multiDay)
+            TextButton.icon(
+              onPressed: _renameDay,
+              icon: const Icon(Icons.edit_outlined),
+              label: const Text('Renombrar'),
+            ),
+          if (_multiDay)
+            TextButton.icon(
+              onPressed: _removeDay,
+              icon: const Icon(Icons.delete_outline),
+              label: const Text('Quitar día'),
+            ),
+        ],
+      ),
+      ..._exercises.asMap().entries.map(
         (entry) => Card(
           margin: const EdgeInsets.only(bottom: 7),
           child: ListTile(

@@ -37,6 +37,12 @@ Las alternativas actuales son plantillas locales sencillas, no recomendaciones g
 - [x] Pedir aprobación antes de aplicar una propuesta.
 - [ ] Revisar el historial y sugerir ajustes concretos (subir peso, cambiar un ejercicio estancado).
 
+## 0.4 · Rutinas de varios días — en pruebas
+
+- [x] Días que se alternan en orden; Hoy propone el siguiente.
+- [x] Personalizar por días (añadir, renombrar, quitar).
+- [x] La IA reparte sesiones complementarias según los días por semana.
+
 ## Más adelante · Cuentas y sincronización — aplazada
 
 - [ ] Definir si habrá cuentas individuales o un grupo compartido.

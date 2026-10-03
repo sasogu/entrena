@@ -19,10 +19,10 @@ void main() {
         provider: provider,
         model: provider.defaultModel,
         apiKey: key,
-        request: const RoutineRequest(
+        request: RoutineRequest(
           goal: 'Ganar fuerza',
           level: 'Principiante',
-          daysPerWeek: 3,
+          daysPerWeek: int.tryParse(Platform.environment['AI_DAYS'] ?? '') ?? 3,
           minutes: 60,
           equipment: 'Gimnasio completo (máquinas, poleas, barras y mancuernas)',
           limitations: 'Me molesta un poco la rodilla izquierda',
@@ -33,7 +33,7 @@ void main() {
       print('OK en ${watch.elapsed.inSeconds}s');
       for (final p in proposals) {
         // ignore: avoid_print
-        print('* ${p.name}: ${p.summary}\n  ${p.reason}\n  ${p.exercises.map((e) => '${e.name} [${e.detail}]').join('\n  ')}${p.dropped.isEmpty ? '' : '\n  QUITADOS: ${p.dropped}'}');
+        print('* ${p.name}: ${p.summary}\n  ${p.reason}\n  ${p.days.map((d) => '[${d.name}]\n    ${d.exercises.map((e) => '${e.name} · ${e.detail}').join('\n    ')}').join('\n  ')}${p.dropped.isEmpty ? '' : '\n  QUITADOS: ${p.dropped}'}');
       }
     } on AiException catch (e) {
       // ignore: avoid_print
