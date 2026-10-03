@@ -2,7 +2,13 @@
 
 Este archivo recoge los cambios relevantes de cada versión. Sigue el formato de [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y versionado semántico.
 
-## [Sin publicar] - 0.2.0
+## 0.2.1 - 2026-10-03 (prueba)
+
+### Corregido
+
+- Al elegir una propuesta de la IA, la pestaña Rutinas no la mostraba y parecía que la rutina había desaparecido (sí se aplicaba en Hoy). Ahora Rutinas muestra arriba «Tu rutina actual» con su nombre y ejercicios.
+
+## 0.2.0 - 2026-10-03 (prueba)
 
 ### Añadido
 

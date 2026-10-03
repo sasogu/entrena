@@ -376,19 +376,25 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _applyProposal(RoutineProposal proposal) => _selectRoutine(
+    RoutineOption(
+      name: proposal.name,
+      summary: proposal.summary,
+      exercises: proposal.exercises,
+    ),
+  );
+
+  @visibleForTesting
+  Future<void> applyProposalForTest(RoutineProposal proposal) =>
+      _applyProposal(proposal);
+
   Future<void> _openRoutineAi() => Navigator.push(
     context,
     MaterialPageRoute(
       builder: (_) => RoutineAiScreen(
         goal: _profile.goal,
         historySummary: summarizeHistory(_profile.history),
-        onApply: (proposal) => _selectRoutine(
-          RoutineOption(
-            name: proposal.name,
-            summary: proposal.summary,
-            exercises: proposal.exercises,
-          ),
-        ),
+        onApply: _applyProposal,
       ),
     ),
   );
@@ -976,6 +982,73 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _currentRoutineCard() {
+    final isTemplate = routineOptions.any(
+      (option) => option.name == _profile.routineName,
+    );
+    return Card(
+      color: const Color(0xFFE0F1EA),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.check_circle, color: Color(0xFF156B5B)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Tu rutina actual',
+                        style: TextStyle(color: Colors.grey.shade700),
+                      ),
+                      Text(
+                        _profile.routineName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 17,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _profile.exercises.isEmpty
+                  ? 'Sin ejercicios. Añade alguno abajo o elige una rutina.'
+                  : _profile.exercises
+                        .map((exercise) => exercise.name)
+                        .join(' · '),
+              style: const TextStyle(fontSize: 12, height: 1.4),
+            ),
+            if (!isTemplate)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  'Si eliges otra rutina, esta se sustituye.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                ),
+              ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => setState(() => _tab = 0),
+                icon: const Icon(Icons.play_arrow),
+                label: const Text('Empezar'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _routinePage() => ListView(
     padding: const EdgeInsets.all(20),
     children: [
@@ -996,6 +1069,8 @@ class _HomeScreenState extends State<HomeScreen> {
         style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(46)),
       ),
       const SizedBox(height: 22),
+      _currentRoutineCard(),
+      const SizedBox(height: 18),
       const Text(
         'Elige una rutina',
         style: TextStyle(fontWeight: FontWeight.w800, fontSize: 19),
