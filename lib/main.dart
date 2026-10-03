@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'backup.dart';
+import 'exercise_guide_sheet.dart';
 import 'models.dart';
 import 'progress.dart';
 import 'progress_screens.dart';
@@ -909,10 +910,20 @@ class _HomeScreenState extends State<HomeScreen> {
               ? exercise.detail
               : '${sets.length} series · ${sets.map((set) => '${set.reps}×${formatKg(set.weight)}').join(', ')}',
         ),
-        trailing: IconButton.filledTonal(
-          tooltip: 'Añadir serie',
-          onPressed: () => _logSet(index),
-          icon: const Icon(Icons.add),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: 'Cómo se hace',
+              onPressed: () => showExerciseGuide(context, exercise.name),
+              icon: const Icon(Icons.info_outline),
+            ),
+            IconButton.filledTonal(
+              tooltip: 'Añadir serie',
+              onPressed: () => _logSet(index),
+              icon: const Icon(Icons.add),
+            ),
+          ],
         ),
         onTap: () => _logSet(index),
       ),
@@ -1059,11 +1070,15 @@ class _HomeScreenState extends State<HomeScreen> {
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             subtitle: Text(entry.value.detail),
+            onTap: () => showExerciseGuide(context, entry.value.name),
             trailing: PopupMenuButton<String>(
-              onSelected: (action) => action == 'edit'
-                  ? _editExercise(entry.key)
-                  : _removeExercise(entry.key),
+              onSelected: (action) => switch (action) {
+                'guide' => showExerciseGuide(context, entry.value.name),
+                'edit' => _editExercise(entry.key),
+                _ => _removeExercise(entry.key),
+              },
               itemBuilder: (context) => const [
+                PopupMenuItem(value: 'guide', child: Text('Cómo se hace')),
                 PopupMenuItem(value: 'edit', child: Text('Editar')),
                 PopupMenuItem(value: 'remove', child: Text('Quitar')),
               ],

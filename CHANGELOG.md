@@ -2,6 +2,14 @@
 
 Este archivo recoge los cambios relevantes de cada versión. Sigue el formato de [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y versionado semántico.
 
+## [Sin publicar] - 0.1.1
+
+### Añadido
+
+- Exportar datos desde el menú ⋮: guarda en el móvil (Descargas, Drive…) o envía un fichero `entrena-AAAA-MM-DD.json` con perfiles, rutinas, historial y notas.
+- Importar datos: añade los perfiles de la copia a los actuales (renombra los repetidos) o reemplaza todo, con confirmación previa.
+- Ficha de cada ejercicio: músculos que trabaja, pasos, errores habituales y un enlace a vídeos de técnica en YouTube. Se abre con ⓘ en Hoy o tocando el ejercicio en Rutinas. Incluye los 10 ejercicios de las rutinas y 12 habituales más (press de banca, sentadilla, peso muerto, dominadas…); para el resto, ofrece la búsqueda en YouTube.
+
 ## [0.1.0] - 2026-10-03
 
 Primera versión publicada.
