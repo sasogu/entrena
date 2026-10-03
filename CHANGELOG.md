@@ -2,6 +2,12 @@
 
 Este archivo recoge los cambios relevantes de cada versión. Sigue el formato de [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y versionado semántico.
 
+## 0.5.1 - 2026-10-03 (prueba)
+
+### Añadido
+
+- Icono propio: mancuerna blanca dentro de un arco ámbar de progreso sobre fondo verde. Icono adaptativo (se adapta a la forma que use el móvil) y versión monocroma para los iconos temáticos de Android 13 o posterior. Fuentes en `assets/icon/`.
+
 ## 0.5.0 - 2026-10-03 (prueba)
 
 ### Cambiado
