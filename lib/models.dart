@@ -94,10 +94,15 @@ class RoutineOption {
     required this.name,
     required this.summary,
     required this.exercises,
+    this.sport,
   });
   final String name;
   final String summary;
   final List<Exercise> exercises;
+
+  /// Deporte al que va dirigida. Solo se muestra con objetivos de ese deporte
+  /// y conserva sus series y repeticiones.
+  final String? sport;
 }
 
 const routineOptions = [
@@ -128,6 +133,29 @@ const routineOptions = [
       Exercise('Elíptica', '15–20 minutos a esfuerzo moderado', 5),
     ],
   ),
+  RoutineOption(
+    name: 'Hockey línea',
+    summary:
+        'Empuje lateral, piernas a una pierna, aductores y estabilidad del tronco',
+    sport: 'Hockey línea',
+    exercises: [
+      Exercise('Bicicleta estática', '8 minutos subiendo el ritmo', 5),
+      Exercise('Saltos de patinador', '3 series · 6 por lado', 0),
+      Exercise('Sentadilla búlgara', '3 series · 8 por pierna', 0),
+      Exercise('Zancada lateral', '3 series · 8 por lado', 0),
+      Exercise(
+        'Peso muerto rumano con mancuernas',
+        '3 series · 8 repeticiones',
+        3,
+      ),
+      Exercise(
+        'Plancha de Copenhague',
+        '2 series · 15–20 segundos por lado',
+        4,
+      ),
+      Exercise('Pallof press', '3 series · 10 por lado', 4),
+    ],
+  ),
 ];
 
 const goalOptions = [
@@ -144,7 +172,31 @@ const goalOptions = [
   'Entrenar en poco tiempo',
   'Mantenerme en forma a partir de los 50',
   'Moverme y sentirme mejor',
+  'Hockey línea: potencia y velocidad de patinaje',
+  'Hockey línea: aguantar todo el partido',
+  'Hockey línea: prevenir lesiones de ingle, cadera y espalda',
+  'Hockey línea: mantenerme durante la temporada',
 ];
+
+/// Qué implica cada objetivo deportivo. Se envía a la IA junto al objetivo.
+const goalContext = {
+  'Hockey línea: potencia y velocidad de patinaje':
+      'Deporte de patinaje con arrancadas, frenadas y cambios de dirección. '
+      'Prioriza fuerza de piernas a una pierna, empuje lateral, potencia '
+      '(saltos) y estabilidad del tronco.',
+  'Hockey línea: aguantar todo el partido':
+      'Esfuerzos intermitentes de 40–90 segundos con descansos cortos. '
+      'Combina cardio por intervalos con fuerza de piernas y tronco.',
+  'Hockey línea: prevenir lesiones de ingle, cadera y espalda':
+      'Las lesiones típicas del patinaje son de aductores (ingle), flexores '
+      'de cadera y zona lumbar. Prioriza aductores (plancha de Copenhague, '
+      'máquina de aductores), glúteo medio, estabilidad del tronco y '
+      'movimientos controlados.',
+  'Hockey línea: mantenerme durante la temporada':
+      'Hay entrenos de pista y partidos cada semana: sesiones cortas, pocas '
+      'series y sin llegar al agotamiento, para mantener la fuerza sin '
+      'cansar las piernas.',
+};
 
 class WorkoutSet {
   const WorkoutSet({

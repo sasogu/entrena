@@ -2,6 +2,15 @@
 
 Este archivo recoge los cambios relevantes de cada versión. Sigue el formato de [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y versionado semántico.
 
+## 0.3.1 - 2026-10-03 (prueba)
+
+### Añadido
+
+- Cuatro objetivos de hockey línea: potencia y velocidad de patinaje, aguantar todo el partido, prevenir lesiones de ingle, cadera y espalda, y mantenerse durante la temporada.
+- Rutina de ejemplo «Hockey línea» (solo aparece con esos objetivos): bicicleta, saltos de patinador, sentadilla búlgara, zancada lateral, peso muerto rumano, plancha de Copenhague y Pallof press.
+- Nueve ejercicios nuevos con ficha: zancada lateral, sentadilla búlgara, aductores y abductores en máquina, plancha lateral, plancha de Copenhague, Pallof press, leñador en polea y saltos de patinador. Vídeo libre para los aductores en máquina (wger, CC BY-SA 4.0).
+- La IA recibe qué implica cada objetivo deportivo para orientar las propuestas.
+
 ## 0.3.0 - 2026-10-03 (prueba)
 
 ### Añadido

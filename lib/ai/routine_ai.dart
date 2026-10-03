@@ -78,6 +78,7 @@ $catalog
 - Respeta el material disponible y las limitaciones. Ante dolor o lesión, elige opciones más suaves y recomienda consultar a un profesional; no hagas diagnósticos.
 - Ajusta series y repeticiones al objetivo y al nivel. En plancha, indica segundos en lugar de repeticiones.
 - Las máquinas de cardio (cinta de correr, bicicleta estática, elíptica, remo ergómetro y escaladora) se indican en minutos y ritmo en "repeticiones" (por ejemplo "15 minutos a ritmo moderado"), sin series. Úsalas para calentar (5–10 minutos) o como bloque propio cuando el objetivo sea resistencia, corazón, perder grasa o correr. Solo si el material incluye un gimnasio completo.
+- Si el objetivo es de un deporte, orienta la rutina a sus exigencias y añade trabajo preventivo; no sustituye al entrenamiento en pista.
 - Si hay historial, tenlo en cuenta para la progresión.
 
 Responde solo con un objeto JSON válido, sin texto antes ni después, con este formato:
@@ -86,6 +87,7 @@ Responde solo con un objeto JSON válido, sin texto antes ni después, con este 
 
 String buildUserPrompt(RoutineRequest request) => [
   'Objetivo: ${request.goal}',
+  if (goalContext[request.goal] case final context?) 'Qué implica: $context',
   'Nivel: ${request.level}',
   'Días por semana: ${request.daysPerWeek}',
   'Minutos por sesión: ${request.minutes}',

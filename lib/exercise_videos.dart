@@ -170,4 +170,12 @@ const exerciseVideos = <String, ExerciseVideo>{
     sourceUrl: 'https://wger.de/es/exercise/365/view/',
     note: 'Variante tumbado',
   ),
+  'Aductores en máquina': ExerciseVideo(
+    asset: 'assets/videos/aductores_maquina.mp4',
+    author: 'Goulart',
+    license: 'CC BY-SA 4.0',
+    licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+    source: 'wger.de',
+    sourceUrl: 'https://wger.de/es/exercise/12/view/',
+  ),
 };

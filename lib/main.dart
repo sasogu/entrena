@@ -414,27 +414,48 @@ class _HomeScreenState extends State<HomeScreen> {
       'Mejorar resistencia' ||
       'Preparar una carrera popular' ||
       'Cuidar la salud del corazón' => '2–3 series · 12–15 repeticiones',
+      'Hockey línea: potencia y velocidad de patinaje' =>
+        '3 series · 5–8 repeticiones',
+      'Hockey línea: aguantar todo el partido' =>
+        '2–3 series · 12–15 repeticiones',
+      'Hockey línea: mantenerme durante la temporada' =>
+        '2 series · 6–10 repeticiones',
       _ => '2–3 series · 8–12 repeticiones',
     };
-    return routineOptions
+    final sport = goalOptions.contains(_profile.goal)
+        ? routineOptions
+              .map((option) => option.sport)
+              .whereType<String>()
+              .where((sport) => _profile.goal.startsWith(sport))
+              .firstOrNull
+        : null;
+    final options = [
+      ...routineOptions.where(
+        (option) => option.sport == sport && sport != null,
+      ),
+      ...routineOptions.where((option) => option.sport == null),
+    ];
+    return options
         .map(
-          (option) => RoutineOption(
-            name: option.name,
-            summary: '${option.summary} · ${_profile.goal.toLowerCase()}',
-            exercises: option.exercises
-                .map(
-                  (exercise) => Exercise(
-                    exercise.name,
-                    exercise.name == 'Plancha' ||
-                            exercise.name == 'Dead bug' ||
-                            isCardioExercise(exercise.name)
-                        ? exercise.detail
-                        : prescription,
-                    exercise.iconIndex,
-                  ),
-                )
-                .toList(),
-          ),
+          (option) => option.sport != null
+              ? option
+              : RoutineOption(
+                  name: option.name,
+                  summary: '${option.summary} · ${_profile.goal.toLowerCase()}',
+                  exercises: option.exercises
+                      .map(
+                        (exercise) => Exercise(
+                          exercise.name,
+                          exercise.name == 'Plancha' ||
+                                  exercise.name == 'Dead bug' ||
+                                  isCardioExercise(exercise.name)
+                              ? exercise.detail
+                              : prescription,
+                          exercise.iconIndex,
+                        ),
+                      )
+                      .toList(),
+                ),
         )
         .toList();
   }

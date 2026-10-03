@@ -23,3 +23,4 @@ Cambios aplicados a todos: recortados a un fragmento de 5–18 segundos, sin aud
 | `triceps_polea.mp4` | Extensión de tríceps en polea (variante a una mano) | Goulart | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) | [wger.de](https://wger.de/es/exercise/803/view/) |
 | `elevaciones_laterales.mp4` | Elevaciones laterales | Goulart | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) | [wger.de](https://wger.de/es/exercise/348/view/) |
 | `curl_femoral.mp4` | Curl femoral (variante tumbado) | Goulart | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) | [wger.de](https://wger.de/es/exercise/365/view/) |
+| `aductores_maquina.mp4` | Aductores en máquina | Goulart | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) | [wger.de](https://wger.de/es/exercise/12/view/) |

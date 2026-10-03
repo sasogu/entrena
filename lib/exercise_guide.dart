@@ -53,6 +53,11 @@ const _iconByExercise = {
   'Curl femoral': 3,
   'Plancha': 4,
   'Dead bug': 4,
+  'Abductores en máquina': 3,
+  'Plancha lateral': 4,
+  'Plancha de Copenhague': 4,
+  'Pallof press': 4,
+  'Leñador en polea': 4,
 };
 
 String normalizeExerciseName(String text) {
@@ -584,5 +589,179 @@ const exerciseGuides = [
     ],
     videoQuery: 'cómo usar la máquina de escaleras gimnasio',
     cardio: true,
+  ),
+  // Trabajo específico para deportes de patinaje (hockey línea).
+  ExerciseGuide(
+    name: 'Zancada lateral',
+    aliases: ['Zancadas laterales', 'Sentadilla lateral', 'Lateral lunge'],
+    muscles: 'Aductores, glúteos y cuádriceps.',
+    steps: [
+      'De pie, con los pies juntos.',
+      'Da un paso amplio hacia un lado con las puntas de los pies mirando al frente.',
+      'Flexiona la rodilla de ese lado llevando la cadera atrás; la otra pierna queda estirada.',
+      'Pecho alto y espalda recta. Baja hasta notar el estiramiento en la cara interna del muslo estirado.',
+      'Empuja con la pierna flexionada para volver al centro y repite hacia el otro lado.',
+    ],
+    mistakes: [
+      'Rodilla flexionada que se va hacia dentro.',
+      'Levantar el talón del pie que se mueve.',
+      'Redondear la espalda.',
+    ],
+    tip: 'Puedes sujetar una mancuerna contra el pecho cuando te salga fácil.',
+    videoQuery: 'zancada lateral técnica correcta',
+  ),
+  ExerciseGuide(
+    name: 'Sentadilla búlgara',
+    aliases: [
+      'Sentadilla búlgara con mancuernas',
+      'Zancada búlgara',
+      'Bulgarian split squat',
+    ],
+    muscles:
+        'Cuádriceps y glúteos; también equilibrio y estabilidad de cadera.',
+    steps: [
+      'De espaldas a un banco, apoya el empeine del pie de atrás sobre el banco.',
+      'Adelanta el otro pie más o menos un paso largo.',
+      'Baja en vertical hasta que el muslo de delante quede casi paralelo al suelo.',
+      'La rodilla de delante sigue la dirección del pie.',
+      'Sube empujando con el pie de delante. Haz todas las repeticiones y cambia de pierna.',
+    ],
+    mistakes: [
+      'Pie de delante demasiado cerca del banco.',
+      'Rodilla de delante que se va hacia dentro.',
+      'Cargar el peso en la pierna de atrás.',
+    ],
+    videoQuery: 'sentadilla búlgara técnica correcta',
+  ),
+  ExerciseGuide(
+    name: 'Aductores en máquina',
+    aliases: [
+      'Máquina de aductores',
+      'Aducción de cadera en máquina',
+      'Aductores',
+    ],
+    muscles: 'Aductores (cara interna del muslo).',
+    steps: [
+      'Ajusta la apertura a una posición cómoda, sin forzar el estiramiento.',
+      'Siéntate con la espalda apoyada y las rodillas contra las almohadillas.',
+      'Junta las piernas despacio.',
+      'Vuelve controlando el peso, sin que las placas choquen.',
+    ],
+    mistakes: [
+      'Abrir más de lo que resulta cómodo.',
+      'Hacerlo a tirones.',
+      'Separar la espalda del respaldo.',
+    ],
+    tip:
+        'Unos aductores fuertes ayudan a prevenir lesiones de ingle en los deportes de patinaje.',
+    videoQuery: 'máquina de aductores técnica correcta',
+  ),
+  ExerciseGuide(
+    name: 'Abductores en máquina',
+    aliases: [
+      'Máquina de abductores',
+      'Abducción de cadera en máquina',
+      'Abductores',
+    ],
+    muscles: 'Glúteo medio y parte externa de la cadera.',
+    steps: [
+      'Siéntate con la espalda apoyada y la parte externa de las rodillas contra las almohadillas.',
+      'Separa las piernas despacio hasta donde puedas sin despegar la cadera del asiento.',
+      'Aguanta un segundo y vuelve controlando el peso.',
+    ],
+    mistakes: [
+      'Hacerlo a tirones.',
+      'Inclinarse hacia delante o atrás para ayudarse.',
+    ],
+    videoQuery: 'máquina de abductores técnica correcta',
+  ),
+  ExerciseGuide(
+    name: 'Plancha lateral',
+    aliases: ['Plancha de lado', 'Side plank'],
+    muscles: 'Oblicuos y abdomen; también glúteo medio.',
+    steps: [
+      'Túmbate de lado con el codo justo debajo del hombro.',
+      'Piernas estiradas y un pie encima del otro.',
+      'Sube la cadera hasta que el cuerpo quede en línea recta de la cabeza a los pies.',
+      'Aguanta respirando con normalidad y cambia de lado.',
+    ],
+    mistakes: ['Dejar caer la cadera.', 'Girar el tronco hacia el suelo.'],
+    tip: 'Para hacerlo más fácil, apoya la rodilla de abajo.',
+    videoQuery: 'plancha lateral técnica correcta',
+  ),
+  ExerciseGuide(
+    name: 'Plancha de Copenhague',
+    aliases: ['Copenhague', 'Plancha Copenhague', 'Copenhagen plank'],
+    muscles: 'Aductores; también oblicuos.',
+    steps: [
+      'Túmbate de lado junto a un banco, con el antebrazo apoyado en el suelo y el codo bajo el hombro.',
+      'Apoya la pierna de arriba sobre el banco: la rodilla en la versión fácil o el tobillo en la difícil.',
+      'Sube la cadera hasta que el cuerpo quede en línea recta. La pierna de abajo cuelga o se apoya ligeramente.',
+      'Aguanta los segundos indicados respirando con normalidad y cambia de lado.',
+    ],
+    mistakes: [
+      'Dejar caer la cadera.',
+      'Empezar con la versión del tobillo sin dominar la de la rodilla.',
+      'Aguantar la respiración.',
+    ],
+    tip:
+        'Se usa para prevenir lesiones de ingle. Empieza con 10–15 segundos por lado.',
+    videoQuery: 'plancha de copenhague aductores',
+  ),
+  ExerciseGuide(
+    name: 'Pallof press',
+    aliases: ['Press Pallof', 'Press antirrotación'],
+    muscles:
+        'Abdomen y oblicuos: trabaja la estabilidad del tronco frente a giros.',
+    steps: [
+      'Coloca la polea a la altura del pecho y ponte de lado a ella.',
+      'Agarra el mango con las dos manos pegado al pecho y aléjate hasta notar tensión.',
+      'Pies a la anchura de los hombros y rodillas ligeramente flexionadas.',
+      'Estira los brazos al frente sin dejar que el tronco gire hacia la polea.',
+      'Aguanta uno o dos segundos y vuelve. Haz todas las repeticiones y cambia de lado.',
+    ],
+    mistakes: [
+      'Dejar que el tronco gire hacia la polea.',
+      'Arquear la espalda.',
+      'Usar demasiado peso.',
+    ],
+    videoQuery: 'pallof press técnica correcta',
+  ),
+  ExerciseGuide(
+    name: 'Leñador en polea',
+    aliases: ['Leñador', 'Leñador con polea', 'Woodchopper', 'Woodchop'],
+    muscles:
+        'Oblicuos y abdomen; también cadera y hombros. Se parece al gesto del tiro.',
+    steps: [
+      'Coloca la polea alta y ponte de lado a ella.',
+      'Agarra el mango con las dos manos por encima del hombro más cercano a la polea.',
+      'Con los brazos casi estirados, tira en diagonal hacia la cadera contraria girando el tronco.',
+      'Gira también el pie de atrás para acompañar el movimiento.',
+      'Vuelve despacio. Haz todas las repeticiones y cambia de lado.',
+    ],
+    mistakes: [
+      'Tirar solo con los brazos sin girar el tronco.',
+      'Redondear la espalda.',
+      'Hacerlo deprisa y sin control.',
+    ],
+    videoQuery: 'leñador en polea técnica correcta',
+  ),
+  ExerciseGuide(
+    name: 'Saltos de patinador',
+    aliases: ['Saltos de patinaje', 'Saltos laterales', 'Skater jumps'],
+    muscles: 'Glúteos, cuádriceps y aductores; potencia lateral y equilibrio.',
+    steps: [
+      'De pie sobre una pierna con la rodilla ligeramente flexionada.',
+      'Salta hacia el lado contrario empujando con la pierna de apoyo, como en el empuje al patinar.',
+      'Aterriza suave sobre la otra pierna, con la rodilla flexionada y la cadera atrás.',
+      'Aguanta un segundo estable y salta de vuelta.',
+    ],
+    mistakes: [
+      'Aterrizar con la pierna estirada.',
+      'Rodilla que se va hacia dentro al caer.',
+      'Saltar más lejos de lo que puedes controlar.',
+    ],
+    tip: 'Prioriza aterrizar estable antes que saltar lejos.',
+    videoQuery: 'skater jumps técnica correcta',
   ),
 ];
