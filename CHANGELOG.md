@@ -2,6 +2,16 @@
 
 Este archivo recoge los cambios relevantes de cada versión. Sigue el formato de [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y versionado semántico.
 
+## 0.3.0 - 2026-10-03 (prueba)
+
+### Añadido
+
+- Máquinas de cardio: cinta de correr, bicicleta estática, elíptica, remo ergómetro y escaladora, con su ficha (cómo se usa, errores habituales) y enlace a YouTube.
+- Registro de cardio en minutos y distancia opcional, en lugar de repeticiones y kilos. Su progreso se mide en minutos por sesión.
+- Rutina de ejemplo «Cardio y fuerza»: calentamiento en cinta, máquinas básicas y elíptica al final.
+- Objetivos nuevos: tonificar, cuidar la salud del corazón, preparar una carrera popular, cuidar la espalda y la postura, volver a entrenar tras una pausa, entrenar en poco tiempo y mantenerme en forma a partir de los 50 (13 en total).
+- La IA puede proponer máquinas de cardio, en minutos y como calentamiento o bloque propio según el objetivo.
+
 ## 0.2.1 - 2026-10-03 (prueba)
 
 ### Corregido

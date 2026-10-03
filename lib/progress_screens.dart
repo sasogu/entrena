@@ -5,13 +5,18 @@ import 'progress.dart';
 
 String formatDate(DateTime date) => '${date.day}/${date.month}/${date.year}';
 
-String formatSets(List<WorkoutSet> sets) => sets
-    .map(
-      (set) => set.weight > 0
-          ? '${set.reps} × ${formatKg(set.weight)}'
-          : '${set.reps} rep',
-    )
-    .join('  /  ');
+String formatSet(WorkoutSet set) {
+  if (set.isCardio) {
+    return set.distanceKm > 0
+        ? '${formatMinutes(set.minutes)} · ${formatDistance(set.distanceKm)}'
+        : formatMinutes(set.minutes);
+  }
+  return set.weight > 0
+      ? '${set.reps} × ${formatKg(set.weight)}'
+      : '${set.reps} rep';
+}
+
+String formatSets(List<WorkoutSet> sets) => sets.map(formatSet).join('  /  ');
 
 /// Una sesión del historial, desplegable para ver la nota y las series.
 class WorkoutRecordTile extends StatelessWidget {
@@ -59,7 +64,11 @@ class ExerciseProgressTile extends StatelessWidget {
       contentPadding: EdgeInsets.zero,
       leading: CircleAvatar(
         child: Icon(
-          progress.usesWeight ? Icons.fitness_center : Icons.repeat,
+          progress.isCardio
+              ? Icons.directions_run
+              : progress.usesWeight
+              ? Icons.fitness_center
+              : Icons.repeat,
           size: 20,
         ),
       ),
@@ -169,7 +178,11 @@ class ExerciseProgressScreen extends StatelessWidget {
                       ),
                       subtitle: Text(formatSets(entry.sets)),
                       trailing: Text(
-                        progress.usesWeight
+                        progress.isCardio
+                            ? entry.totalDistance > 0
+                                  ? 'Distancia\n${formatDistance(entry.totalDistance)}'
+                                  : 'Total\n${formatMinutes(entry.totalMinutes)}'
+                            : progress.usesWeight
                             ? 'Volumen\n${formatKg(entry.volume)}'
                             : 'Total\n${entry.totalReps} rep',
                         textAlign: TextAlign.right,

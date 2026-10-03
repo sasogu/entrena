@@ -7,7 +7,7 @@ import 'ai_client.dart';
 
 const levelOptions = ['Principiante', 'Intermedio', 'Avanzado'];
 const equipmentOptions = [
-  'Gimnasio completo (máquinas, poleas, barras y mancuernas)',
+  'Gimnasio completo (máquinas, cardio, poleas, barras y mancuernas)',
   'Solo mancuernas y banco',
   'Sin material (peso corporal)',
 ];
@@ -51,32 +51,6 @@ class RoutineProposal {
   final List<String> dropped;
 }
 
-/// Icono de la app según el grupo del ejercicio (ver exerciseIcons).
-const _iconByExercise = {
-  'Sentadilla goblet': 0,
-  'Prensa de piernas': 0,
-  'Sentadilla con barra': 0,
-  'Zancadas': 0,
-  'Extensión de cuádriceps': 0,
-  'Press de pecho en máquina': 1,
-  'Press inclinado en máquina': 1,
-  'Press de banca': 1,
-  'Press militar': 1,
-  'Elevaciones laterales': 1,
-  'Extensión de tríceps en polea': 1,
-  'Jalón al pecho': 2,
-  'Remo sentado en polea': 2,
-  'Dominadas': 2,
-  'Curl de bíceps': 2,
-  'Peso muerto rumano con mancuernas': 3,
-  'Puente de glúteos': 3,
-  'Peso muerto': 3,
-  'Hip thrust': 3,
-  'Curl femoral': 3,
-  'Plancha': 4,
-  'Dead bug': 4,
-};
-
 String summarizeHistory(List<WorkoutRecord> history) {
   final progress = buildExerciseProgress(history);
   if (progress.isEmpty) return 'Sin sesiones registradas.';
@@ -103,6 +77,7 @@ Reglas:
 $catalog
 - Respeta el material disponible y las limitaciones. Ante dolor o lesión, elige opciones más suaves y recomienda consultar a un profesional; no hagas diagnósticos.
 - Ajusta series y repeticiones al objetivo y al nivel. En plancha, indica segundos en lugar de repeticiones.
+- Las máquinas de cardio (cinta de correr, bicicleta estática, elíptica, remo ergómetro y escaladora) se indican en minutos y ritmo en "repeticiones" (por ejemplo "15 minutos a ritmo moderado"), sin series. Úsalas para calentar (5–10 minutos) o como bloque propio cuando el objetivo sea resistencia, corazón, perder grasa o correr. Solo si el material incluye un gimnasio completo.
 - Si hay historial, tenlo en cuenta para la progresión.
 
 Responde solo con un objeto JSON válido, sin texto antes ni después, con este formato:
@@ -159,13 +134,13 @@ List<RoutineProposal> parseProposals(String text) {
       final reps = '${entry['repeticiones'] ?? ''}'.trim();
       final note = '${entry['nota'] ?? ''}'.trim();
       final detail = [
-        if (sets != null) '$sets series',
+        if (sets != null && !guide.cardio) '$sets series',
         if (reps.isNotEmpty)
           RegExp(r'[a-zA-Z]').hasMatch(reps) ? reps : '$reps repeticiones',
         if (note.isNotEmpty) note,
       ].join(' · ');
       exercises.add(
-        Exercise(guide.name, detail, _iconByExercise[guide.name] ?? 0),
+        Exercise(guide.name, detail, exerciseIconIndex(guide.name)),
       );
     }
     if (exercises.length < 3) continue;

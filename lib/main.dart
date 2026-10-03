@@ -10,6 +10,7 @@ import 'ai/ai_screens.dart';
 import 'ai/routine_ai.dart';
 import 'backup.dart';
 import 'credits_screen.dart';
+import 'exercise_guide.dart';
 import 'exercise_guide_sheet.dart';
 import 'models.dart';
 import 'progress.dart';
@@ -316,11 +317,15 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 DropdownButtonFormField<String>(
                   initialValue: selected,
+                  isExpanded: true,
+                  menuMaxHeight: 420,
                   decoration: const InputDecoration(labelText: 'Objetivo'),
                   items: [
                     ...goalOptions.map(
-                      (goal) =>
-                          DropdownMenuItem(value: goal, child: Text(goal)),
+                      (goal) => DropdownMenuItem(
+                        value: goal,
+                        child: Text(goal, overflow: TextOverflow.ellipsis),
+                      ),
                     ),
                     const DropdownMenuItem(
                       value: 'Otro',
@@ -403,7 +408,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final prescription = switch (_profile.goal) {
       'Ganar fuerza' => '3 series · 6–8 repeticiones',
       'Aumentar masa muscular' => '3 series · 8–12 repeticiones',
-      'Mejorar resistencia' => '2–3 series · 12–15 repeticiones',
+      'Tonificar' ||
+      'Perder grasa' ||
+      'Entrenar en poco tiempo' => '2–3 series · 10–15 repeticiones',
+      'Mejorar resistencia' ||
+      'Preparar una carrera popular' ||
+      'Cuidar la salud del corazón' => '2–3 series · 12–15 repeticiones',
       _ => '2–3 series · 8–12 repeticiones',
     };
     return routineOptions
@@ -415,7 +425,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 .map(
                   (exercise) => Exercise(
                     exercise.name,
-                    exercise.name == 'Plancha' || exercise.name == 'Dead bug'
+                    exercise.name == 'Plancha' ||
+                            exercise.name == 'Dead bug' ||
+                            isCardioExercise(exercise.name)
                         ? exercise.detail
                         : prescription,
                     exercise.iconIndex,
@@ -496,6 +508,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _logSet(int index) async {
     final exercise = _profile.exercises[index];
+    if (isCardioExercise(exercise.name)) return _logCardio(index);
     final repsController = TextEditingController();
     final weightController = TextEditingController();
     final result = await showDialog<WorkoutSet>(
@@ -548,6 +561,70 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => (_sessionSets[index] ??= []).add(result));
   }
 
+  Future<void> _logCardio(int index) async {
+    final exercise = _profile.exercises[index];
+    final minutesController = TextEditingController();
+    final distanceController = TextEditingController();
+    double? parse(TextEditingController c) =>
+        double.tryParse(c.text.trim().replaceAll(',', '.'));
+    final result = await showDialog<WorkoutSet>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Registrar · ${exercise.name}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: minutesController,
+              autofocus: true,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: const InputDecoration(labelText: 'Minutos'),
+            ),
+            TextField(
+              controller: distanceController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: const InputDecoration(
+                labelText: 'Distancia (km, opcional)',
+                hintText: 'La que marque la máquina',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final minutes = parse(minutesController);
+              final distance = distanceController.text.trim().isEmpty
+                  ? 0.0
+                  : parse(distanceController);
+              if (minutes == null ||
+                  minutes <= 0 ||
+                  distance == null ||
+                  distance < 0) {
+                return;
+              }
+              Navigator.pop(
+                context,
+                WorkoutSet(minutes: minutes, distanceKm: distance),
+              );
+            },
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+    if (result == null || !mounted) return;
+    setState(() => (_sessionSets[index] ??= []).add(result));
+  }
+
   Future<void> _editExercise([int? index]) async {
     final existing = index == null ? null : _profile.exercises[index];
     final nameController = TextEditingController(text: existing?.name ?? '');
@@ -586,7 +663,11 @@ class _HomeScreenState extends State<HomeScreen> {
               if (name.isEmpty || detail.isEmpty) return;
               Navigator.pop(
                 context,
-                Exercise(name, detail, existing?.iconIndex ?? 0),
+                Exercise(
+                  name,
+                  detail,
+                  existing?.iconIndex ?? exerciseIconIndex(name),
+                ),
               );
             },
             child: const Text('Guardar'),
@@ -960,7 +1041,9 @@ class _HomeScreenState extends State<HomeScreen> {
         subtitle: Text(
           sets.isEmpty
               ? exercise.detail
-              : '${sets.length} series · ${sets.map((set) => '${set.reps}×${formatKg(set.weight)}').join(', ')}',
+              : isCardioExercise(exercise.name)
+              ? formatSets(sets)
+              : '${sets.length} series · ${formatSets(sets)}',
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -971,7 +1054,9 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: const Icon(Icons.info_outline),
             ),
             IconButton.filledTonal(
-              tooltip: 'Añadir serie',
+              tooltip: isCardioExercise(exercise.name)
+                  ? 'Registrar'
+                  : 'Añadir serie',
               onPressed: () => _logSet(index),
               icon: const Icon(Icons.add),
             ),

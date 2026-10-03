@@ -74,6 +74,7 @@ const exerciseIcons = [
   Icons.cable,
   Icons.sports_handball,
   Icons.self_improvement,
+  Icons.directions_run,
 ];
 
 const defaultRoutine = [
@@ -116,27 +117,63 @@ const routineOptions = [
       Exercise('Dead bug', '3 series · 8 por lado', 4),
     ],
   ),
+  RoutineOption(
+    name: 'Cardio y fuerza',
+    summary: 'Calentamiento en cinta, máquinas básicas y elíptica al final',
+    exercises: [
+      Exercise('Cinta de correr', '10 minutos caminando a ritmo vivo', 5),
+      Exercise('Prensa de piernas', '3 series · 10–12 repeticiones', 0),
+      Exercise('Press de pecho en máquina', '3 series · 10–12 repeticiones', 1),
+      Exercise('Remo sentado en polea', '3 series · 10–12 repeticiones', 2),
+      Exercise('Elíptica', '15–20 minutos a esfuerzo moderado', 5),
+    ],
+  ),
 ];
 
 const goalOptions = [
   'Empezar a entrenar',
   'Ganar fuerza',
   'Aumentar masa muscular',
-  'Mejorar resistencia',
+  'Tonificar',
   'Perder grasa',
+  'Mejorar resistencia',
+  'Cuidar la salud del corazón',
+  'Preparar una carrera popular',
+  'Cuidar la espalda y la postura',
+  'Volver a entrenar tras una pausa',
+  'Entrenar en poco tiempo',
+  'Mantenerme en forma a partir de los 50',
   'Moverme y sentirme mejor',
 ];
 
 class WorkoutSet {
-  const WorkoutSet({required this.reps, required this.weight});
+  const WorkoutSet({
+    this.reps = 0,
+    this.weight = 0,
+    this.minutes = 0,
+    this.distanceKm = 0,
+  });
   final int reps;
   final double weight;
 
-  Map<String, dynamic> toJson() => {'reps': reps, 'weight': weight};
+  /// Solo en máquinas de cardio.
+  final double minutes;
+  final double distanceKm;
+
+  bool get isCardio => minutes > 0;
+
+  Map<String, dynamic> toJson() => {
+    'reps': reps,
+    'weight': weight,
+    if (minutes > 0) 'minutes': minutes,
+    if (distanceKm > 0) 'distanceKm': distanceKm,
+  };
 
   factory WorkoutSet.fromJson(Map<String, dynamic> json) => WorkoutSet(
     reps: (json['reps'] as num?)?.toInt() ?? 0,
     weight: (json['weight'] as num?)?.toDouble() ?? 0,
+    minutes: (json['minutes'] as num?)?.toDouble() ?? 0,
+    distanceKm: (json['distanceKm'] as num?)?.toDouble() ?? 0,
   );
 }
 

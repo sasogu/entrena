@@ -10,6 +10,7 @@ class ExerciseGuide {
     required this.mistakes,
     this.tip,
     required this.videoQuery,
+    this.cardio = false,
   });
   final String name;
   final List<String> aliases;
@@ -18,7 +19,41 @@ class ExerciseGuide {
   final List<String> mistakes;
   final String? tip;
   final String videoQuery;
+
+  /// Máquinas de cardio: se registran en minutos (y distancia), no en
+  /// repeticiones y kilos.
+  final bool cardio;
 }
+
+bool isCardioExercise(String name) => findExerciseGuide(name)?.cardio ?? false;
+
+/// Índice en exerciseIcons según el grupo del ejercicio; 0 si no se conoce.
+int exerciseIconIndex(String name) {
+  final guide = findExerciseGuide(name);
+  if (guide == null) return 0;
+  if (guide.cardio) return 5;
+  return _iconByExercise[guide.name] ?? 0;
+}
+
+const _iconByExercise = {
+  'Press de pecho en máquina': 1,
+  'Press inclinado en máquina': 1,
+  'Press de banca': 1,
+  'Press militar': 1,
+  'Elevaciones laterales': 1,
+  'Extensión de tríceps en polea': 1,
+  'Jalón al pecho': 2,
+  'Remo sentado en polea': 2,
+  'Dominadas': 2,
+  'Curl de bíceps': 2,
+  'Peso muerto rumano con mancuernas': 3,
+  'Puente de glúteos': 3,
+  'Peso muerto': 3,
+  'Hip thrust': 3,
+  'Curl femoral': 3,
+  'Plancha': 4,
+  'Dead bug': 4,
+};
 
 String normalizeExerciseName(String text) {
   const from = 'áàäâéèëêíìïîóòöôúùüûñç';
@@ -447,5 +482,107 @@ const exerciseGuides = [
       'Bajar de golpe.',
     ],
     videoQuery: 'curl femoral máquina técnica correcta',
+  ),
+  // Máquinas de cardio.
+  ExerciseGuide(
+    name: 'Cinta de correr',
+    aliases: ['Cinta', 'Caminar en cinta', 'Correr en cinta', 'Treadmill'],
+    muscles: 'Corazón y pulmones; también piernas y glúteos.',
+    steps: [
+      'Sube con la cinta parada y los pies en los laterales. Engancha la pinza de seguridad a la ropa.',
+      'Arranca a poca velocidad y empieza caminando 3–5 minutos para calentar.',
+      'Sube la velocidad o la inclinación poco a poco hasta un ritmo en el que puedas hablar con frases cortas.',
+      'Camina o corre erguido, mirando al frente, con pasos cortos y cerca del centro de la cinta.',
+      'Al terminar, baja la velocidad poco a poco y camina 2–3 minutos antes de parar.',
+    ],
+    mistakes: [
+      'Agarrarse a los pasamanos, sobre todo con inclinación alta.',
+      'Dar pasos muy largos o ir pegado al borde delantero.',
+      'Bajarse con la cinta en marcha.',
+    ],
+    tip:
+        'Caminar con inclinación (5–10 %) es una buena opción de bajo impacto.',
+    videoQuery: 'cómo usar la cinta de correr gimnasio principiantes',
+    cardio: true,
+  ),
+  ExerciseGuide(
+    name: 'Bicicleta estática',
+    aliases: ['Bici estática', 'Bicicleta', 'Bicicleta de spinning'],
+    muscles: 'Corazón y pulmones; también cuádriceps, glúteos y gemelos.',
+    steps: [
+      'Ajusta el sillín a la altura de tu cadera estando de pie junto a la bici.',
+      'Sentado, con el pedal abajo del todo, la rodilla debe quedar ligeramente flexionada.',
+      'Coloca el manillar a una altura cómoda para llevar la espalda recta.',
+      'Pedalea 3–5 minutos con poca resistencia y después súbela hasta un esfuerzo moderado.',
+    ],
+    mistakes: [
+      'Sillín demasiado bajo: carga las rodillas.',
+      'Resistencia tan baja que los pies rebotan en los pedales.',
+      'Encorvar la espalda sobre el manillar.',
+    ],
+    videoQuery: 'ajustar bicicleta estática altura sillín técnica',
+    cardio: true,
+  ),
+  ExerciseGuide(
+    name: 'Elíptica',
+    aliases: ['Bicicleta elíptica', 'Máquina elíptica'],
+    muscles:
+        'Corazón y pulmones; piernas y glúteos, y brazos si usas las asas móviles.',
+    steps: [
+      'Sube con los pies apoyados enteros en los pedales y agarra las asas.',
+      'Empieza a pedalear hacia delante con poca resistencia.',
+      'Mantén el tronco erguido y empuja y tira de las asas para mover también los brazos.',
+      'Sube la resistencia o la inclinación poco a poco hasta un esfuerzo moderado.',
+    ],
+    mistakes: [
+      'Ponerse de puntillas en lugar de apoyar todo el pie.',
+      'Apoyar todo el peso en las asas.',
+      'Inclinarse hacia delante.',
+    ],
+    tip: 'Es de bajo impacto: suele ir bien si molestan rodillas o tobillos.',
+    videoQuery: 'cómo usar la elíptica correctamente',
+    cardio: true,
+  ),
+  ExerciseGuide(
+    name: 'Remo ergómetro',
+    aliases: ['Máquina de remo', 'Remo en máquina', 'Remoergómetro'],
+    muscles: 'Corazón y pulmones; piernas, espalda y brazos.',
+    steps: [
+      'Sujeta los pies con las cintas y coge el mango con los brazos estirados.',
+      'Empuja primero con las piernas; cuando estén casi estiradas, inclina un poco el tronco hacia atrás.',
+      'Termina tirando del mango con los brazos hasta la parte baja del pecho.',
+      'Vuelve en orden inverso: brazos, tronco y por último dobla las piernas.',
+    ],
+    mistakes: [
+      'Tirar primero con los brazos en lugar de empujar con las piernas.',
+      'Redondear la espalda.',
+      'Encoger los hombros al tirar.',
+    ],
+    tip: 'Más o menos el 60 % de la fuerza sale de las piernas.',
+    videoQuery: 'remo ergómetro técnica correcta principiantes',
+    cardio: true,
+  ),
+  ExerciseGuide(
+    name: 'Escaladora',
+    aliases: [
+      'Máquina de escaleras',
+      'Simulador de escaleras',
+      'Stepper',
+      'Stair climber',
+    ],
+    muscles: 'Corazón y pulmones; glúteos, cuádriceps y gemelos.',
+    steps: [
+      'Sube con la máquina parada y agarra los pasamanos solo para mantener el equilibrio.',
+      'Empieza a un ritmo lento.',
+      'Pisa cada escalón con el pie entero y el tronco erguido.',
+      'Sube el ritmo poco a poco hasta un esfuerzo moderado.',
+    ],
+    mistakes: [
+      'Inclinarse y cargar el peso en los pasamanos.',
+      'Subir de puntillas.',
+      'Empezar demasiado rápido.',
+    ],
+    videoQuery: 'cómo usar la máquina de escaleras gimnasio',
+    cardio: true,
   ),
 ];
