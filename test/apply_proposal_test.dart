@@ -26,17 +26,18 @@ void main() {
     await state.applyProposalForTest(proposal, 'Ganar fuerza');
     await tester.pumpAndSettle();
 
-    // Hoy muestra los ejercicios nuevos.
-    expect(find.text('Prensa de piernas'), findsOneWidget);
-    expect(find.text('Sentadilla goblet'), findsNothing);
-
-    // Rutinas muestra la rutina elegida como actual.
-    await tester.tap(find.text('Rutinas'));
-    await tester.pumpAndSettle();
-    expect(find.text('Fuerza con máquinas'), findsWidgets);
+    // Tras elegirla, se abre Rutinas con la rutina nueva como actual.
+    NavigationBar bar() => tester.widget(find.byType(NavigationBar));
+    expect(bar().selectedIndex, 1);
     expect(find.text('Tu rutina actual'), findsOneWidget);
+    expect(find.text('Fuerza con máquinas'), findsOneWidget);
     // El objetivo usado para pedir la propuesta pasa al perfil.
-    expect(find.textContaining('· ganar fuerza'), findsWidgets);
-    expect(find.text('Actual'), findsNothing);
+    expect(find.text('Objetivo: Ganar fuerza'), findsWidgets);
+
+    // Hoy muestra los ejercicios nuevos.
+    await tester.tap(find.text('Hoy').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Prensa de piernas').hitTestable(), findsOneWidget);
+    expect(find.text('Sentadilla goblet').hitTestable(), findsNothing);
   });
 }

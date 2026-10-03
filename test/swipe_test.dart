@@ -4,7 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  testWidgets('deslizar cambia entre Hoy, Rutinas y Progreso', (tester) async {
+  testWidgets('deslizar cambia entre Hoy, Rutinas, Planifica y Progreso', (
+    tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 2.5;
@@ -15,19 +17,25 @@ void main() {
     NavigationBar bar() => tester.widget(find.byType(NavigationBar));
     expect(bar().selectedIndex, 0);
 
-    await tester.fling(find.byType(PageView), const Offset(-400, 0), 1500);
-    await tester.pumpAndSettle();
+    Future<void> swipe(double dx) async {
+      await tester.fling(find.byType(PageView), Offset(dx, 0), 1500);
+      await tester.pumpAndSettle();
+    }
+
+    await swipe(-400);
     expect(bar().selectedIndex, 1);
     expect(find.text('Tu rutina actual'), findsOneWidget);
 
-    await tester.fling(find.byType(PageView), const Offset(-400, 0), 1500);
-    await tester.pumpAndSettle();
+    await swipe(-400);
     expect(bar().selectedIndex, 2);
+    expect(find.text('Cambiar objetivo'), findsOneWidget);
+
+    await swipe(-400);
+    expect(bar().selectedIndex, 3);
     expect(find.text('Tu progreso'), findsOneWidget);
 
-    await tester.fling(find.byType(PageView), const Offset(400, 0), 1500);
-    await tester.pumpAndSettle();
-    expect(bar().selectedIndex, 1);
+    await swipe(400);
+    expect(bar().selectedIndex, 2);
 
     // La barra sigue funcionando y salta directamente.
     await tester.tap(find.text('Hoy'));

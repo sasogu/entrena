@@ -2,6 +2,14 @@
 
 Este archivo recoge los cambios relevantes de cada versión. Sigue el formato de [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y versionado semántico.
 
+## 0.5.0 - 2026-10-03 (prueba)
+
+### Cambiado
+
+- Nueva pestaña **Planifica** con todo lo necesario para elegir o crear una rutina: cambiar el objetivo, pedir propuestas a la IA y las rutinas de ejemplo.
+- **Rutinas** muestra solo la rutina vigente (sus días y ejercicios) y su edición: ordenar, añadir del catálogo, editar y gestionar días. Un acceso «Cambiar de rutina» lleva a Planifica.
+- Al elegir una rutina de ejemplo o una propuesta de la IA, la app abre Rutinas con la rutina nueva.
+
 ## 0.4.3 - 2026-10-03 (prueba)
 
 ### Añadido

@@ -18,7 +18,7 @@ Future<void> _openRoutines(WidgetTester tester, String goal) async {
   addTearDown(tester.view.reset);
   await tester.pumpWidget(const EntrenaApp());
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Rutinas'));
+  await tester.tap(find.text('Planifica').last);
   await tester.pumpAndSettle();
 }
 

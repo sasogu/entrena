@@ -427,9 +427,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _applyProposal(RoutineProposal proposal, String goal) {
+  Future<void> _applyProposal(RoutineProposal proposal, String goal) async {
     _profile.goal = goal;
-    return _selectRoutine(
+    await _selectRoutine(
       RoutineOption(
         name: proposal.name,
         summary: proposal.summary,
@@ -438,6 +438,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+    // Lleva a Rutinas para ver la rutina que se acaba de elegir.
+    _goToTab(1);
   }
 
   @visibleForTesting
@@ -542,7 +544,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _sessionSets.clear();
       _sessionNote = '';
     });
-    _goToTab(2);
+    _goToTab(3);
     await _save();
     if (mounted) {
       ScaffoldMessenger.of(
@@ -912,7 +914,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final titles = ['Hoy', 'Rutinas', 'Progreso'];
+    final titles = ['Hoy', 'Rutinas', 'Planifica', 'Progreso'];
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 20,
@@ -1028,13 +1030,18 @@ class _HomeScreenState extends State<HomeScreen> {
       body: !_loaded
           ? const Center(child: CircularProgressIndicator())
           : SafeArea(
-              // Deslizar a los lados cambia entre Hoy, Rutinas y Progreso.
+              // Deslizar a los lados cambia entre Hoy, Rutinas, Planifica y Progreso.
               child: PageView(
                 controller: _pages,
                 onPageChanged: (index) {
                   if (!_animatingToTab) setState(() => _tab = index);
                 },
-                children: [_today(), _routinePage(), _progressPage()],
+                children: [
+                  _today(),
+                  _routinePage(),
+                  _planPage(),
+                  _progressPage(),
+                ],
               ),
             ),
       bottomNavigationBar: NavigationBar(
@@ -1050,6 +1057,11 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.view_list_outlined),
             selectedIcon: Icon(Icons.view_list),
             label: 'Rutinas',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.edit_calendar_outlined),
+            selectedIcon: Icon(Icons.edit_calendar),
+            label: 'Planifica',
           ),
           NavigationDestination(
             icon: Icon(Icons.insights_outlined),
@@ -1419,7 +1431,7 @@ class _HomeScreenState extends State<HomeScreen> {
     padding: const EdgeInsets.all(20),
     children: [
       const Text(
-        'Tu plan',
+        'Tu rutina',
         style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
       ),
       const SizedBox(height: 6),
@@ -1427,101 +1439,8 @@ class _HomeScreenState extends State<HomeScreen> {
         'Objetivo: ${_profile.goal}',
         style: TextStyle(color: Colors.grey.shade700),
       ),
-      const SizedBox(height: 12),
-      OutlinedButton.icon(
-        onPressed: _chooseGoal,
-        icon: const Icon(Icons.flag_outlined),
-        label: const Text('Cambiar objetivo'),
-        style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(46)),
-      ),
-      const SizedBox(height: 22),
+      const SizedBox(height: 16),
       _currentRoutineCard(),
-      const SizedBox(height: 18),
-      const Text(
-        'Elige una rutina',
-        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 19),
-      ),
-      const SizedBox(height: 4),
-      Text(
-        'Puedes cambiarla cuando quieras.',
-        style: TextStyle(color: Colors.grey.shade700),
-      ),
-      const SizedBox(height: 12),
-      ..._optionsForGoal().map((option) {
-        final selected = option.name == _profile.routineName;
-        return Card(
-          margin: const EdgeInsets.only(bottom: 10),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      selected ? Icons.check_circle : Icons.fitness_center,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        option.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    if (selected) const Chip(label: Text('Actual')),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  option.summary,
-                  style: TextStyle(color: Colors.grey.shade700),
-                ),
-                const SizedBox(height: 8),
-                _daysSummary([
-                  for (final day in option.days) (day.name, day.exercises),
-                ]),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: selected
-                      ? OutlinedButton.icon(
-                          onPressed: () => _goToTab(0),
-                          icon: const Icon(Icons.play_arrow),
-                          label: const Text('Empezar'),
-                        )
-                      : FilledButton.tonal(
-                          onPressed: () => _selectRoutine(option),
-                          child: const Text('Elegir esta rutina'),
-                        ),
-                ),
-              ],
-            ),
-          ),
-        );
-      }),
-      Card(
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 6,
-          ),
-          leading: const Icon(Icons.auto_awesome),
-          title: const Text(
-            'Pedir propuestas a la IA',
-            style: TextStyle(fontWeight: FontWeight.w700),
-          ),
-          subtitle: const Text(
-            'Rutinas adaptadas a tu objetivo, nivel y material. '
-            'Tú eliges si aplicas alguna.',
-          ),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: _openRoutineAi,
-        ),
-      ),
       const SizedBox(height: 18),
       const Text(
         'Personaliza tu rutina',
@@ -1631,6 +1550,21 @@ class _HomeScreenState extends State<HomeScreen> {
       const SizedBox(height: 14),
       Card(
         child: ListTile(
+          leading: const Icon(Icons.edit_calendar_outlined),
+          title: const Text(
+            'Cambiar de rutina',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
+          subtitle: const Text(
+            'Rutinas de ejemplo, propuestas de la IA y objetivo, en Planifica.',
+          ),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => _goToTab(2),
+        ),
+      ),
+      const SizedBox(height: 10),
+      Card(
+        child: ListTile(
           leading: const Icon(Icons.lightbulb_outline),
           title: const Text(
             'Consejo para empezar',
@@ -1645,6 +1579,118 @@ class _HomeScreenState extends State<HomeScreen> {
   );
 
   static const _recentLimit = 5;
+
+  Widget _planPage() => ListView(
+    padding: const EdgeInsets.all(20),
+    children: [
+      const Text(
+        'Planifica',
+        style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
+      ),
+      const SizedBox(height: 6),
+      Text(
+        'Objetivo: ${_profile.goal}',
+        style: TextStyle(color: Colors.grey.shade700),
+      ),
+      const SizedBox(height: 12),
+      OutlinedButton.icon(
+        onPressed: _chooseGoal,
+        icon: const Icon(Icons.flag_outlined),
+        label: const Text('Cambiar objetivo'),
+        style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(46)),
+      ),
+      const SizedBox(height: 16),
+      Card(
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 6,
+          ),
+          leading: const Icon(Icons.auto_awesome),
+          title: const Text(
+            'Pedir propuestas a la IA',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
+          subtitle: const Text(
+            'Rutinas adaptadas a tu objetivo, nivel, días y material. '
+            'Tú eliges si aplicas alguna.',
+          ),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: _openRoutineAi,
+        ),
+      ),
+      const SizedBox(height: 18),
+      const Text(
+        'Rutinas de ejemplo',
+        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 19),
+      ),
+      const SizedBox(height: 4),
+      Text(
+        'Al elegir una, sustituye a tu rutina actual. Tu historial no se toca.',
+        style: TextStyle(color: Colors.grey.shade700),
+      ),
+      const SizedBox(height: 12),
+      ..._optionsForGoal().map((option) {
+        final selected = option.name == _profile.routineName;
+        return Card(
+          margin: const EdgeInsets.only(bottom: 10),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      selected ? Icons.check_circle : Icons.fitness_center,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        option.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                    if (selected) const Chip(label: Text('Actual')),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  option.summary,
+                  style: TextStyle(color: Colors.grey.shade700),
+                ),
+                const SizedBox(height: 8),
+                _daysSummary([
+                  for (final day in option.days) (day.name, day.exercises),
+                ]),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: selected
+                      ? OutlinedButton.icon(
+                          onPressed: () => _goToTab(1),
+                          icon: const Icon(Icons.visibility_outlined),
+                          label: const Text('Es tu rutina actual: verla'),
+                        )
+                      : FilledButton.tonal(
+                          onPressed: () async {
+                            await _selectRoutine(option);
+                            _goToTab(1);
+                          },
+                          child: const Text('Elegir esta rutina'),
+                        ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }),
+    ],
+  );
 
   Widget _progressPage() {
     final last = _profile.lastWorkout;

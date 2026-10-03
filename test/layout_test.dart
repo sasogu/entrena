@@ -27,12 +27,12 @@ Future<void> _scrollToEnd(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('Hoy, Rutinas y Progreso caben en un móvil', (tester) async {
+  testWidgets('las cuatro pestañas caben en un móvil', (tester) async {
     _phone(tester);
     SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(const EntrenaApp());
     await tester.pumpAndSettle();
-    for (final tab in ['Hoy', 'Rutinas', 'Progreso']) {
+    for (final tab in ['Hoy', 'Rutinas', 'Planifica', 'Progreso']) {
       await tester.tap(find.text(tab).last);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull, reason: tab);
