@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:video_player/video_player.dart';
 
 import 'exercise_guide.dart';
+import 'exercise_videos.dart';
 
 Future<void> showExerciseGuide(BuildContext context, String name) =>
     showModalBottomSheet<void>(
@@ -55,6 +57,10 @@ class ExerciseGuideView extends StatelessWidget {
           )
         else ...[
           Text('Trabaja: ${guide.muscles}', style: grey),
+          if (exerciseVideos[guide.name] case final video?) ...[
+            const SizedBox(height: 14),
+            ExerciseVideoPlayer(video: video),
+          ],
           _heading('Cómo se hace'),
           ...guide.steps.asMap().entries.map(
             (entry) => _item(
@@ -89,7 +95,11 @@ class ExerciseGuideView extends StatelessWidget {
         FilledButton.icon(
           onPressed: () => _openVideo(context),
           icon: const Icon(Icons.play_circle_outline),
-          label: const Text('Ver vídeos en YouTube'),
+          label: Text(
+            exerciseVideos.containsKey(guide?.name)
+                ? 'Ver más vídeos en YouTube'
+                : 'Ver vídeos en YouTube',
+          ),
         ),
         const SizedBox(height: 12),
         Text(
@@ -120,4 +130,112 @@ class ExerciseGuideView extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// Vídeo corto de técnica: arranca solo, en bucle y sin sonido. Se pausa al
+/// tocarlo. Debajo muestra el autor y la licencia, como exige la licencia.
+class ExerciseVideoPlayer extends StatefulWidget {
+  const ExerciseVideoPlayer({super.key, required this.video});
+  final ExerciseVideo video;
+
+  @override
+  State<ExerciseVideoPlayer> createState() => _ExerciseVideoPlayerState();
+}
+
+class _ExerciseVideoPlayerState extends State<ExerciseVideoPlayer> {
+  late final VideoPlayerController _controller;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.asset(widget.video.asset);
+    _controller
+        .initialize()
+        .then((_) async {
+          await _controller.setVolume(0);
+          await _controller.setLooping(true);
+          await _controller.play();
+          if (mounted) setState(() {});
+        })
+        .catchError((Object _) {
+          if (mounted) setState(() => _failed = true);
+        });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _togglePlay() => setState(
+    () =>
+        _controller.value.isPlaying ? _controller.pause() : _controller.play(),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final video = widget.video;
+    final ready = _controller.value.isInitialized;
+    final aspect = ready ? _controller.value.aspectRatio : 16 / 9;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 360),
+            child: AspectRatio(
+              aspectRatio: aspect,
+              child: ColoredBox(
+                color: const Color(0xFF1B1F1C),
+                child: _failed
+                    ? const Center(
+                        child: Icon(Icons.videocam_off, color: Colors.white70),
+                      )
+                    : !ready
+                    ? const Center(child: CircularProgressIndicator())
+                    : GestureDetector(
+                        onTap: _togglePlay,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            VideoPlayer(_controller),
+                            if (!_controller.value.isPlaying)
+                              const CircleAvatar(
+                                radius: 26,
+                                backgroundColor: Colors.black54,
+                                child: Icon(
+                                  Icons.play_arrow,
+                                  color: Colors.white,
+                                  size: 32,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        if (video.note != null)
+          Text(
+            video.note!,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+        InkWell(
+          onTap: () => launchUrl(
+            Uri.parse(video.sourceUrl),
+            mode: LaunchMode.externalApplication,
+          ),
+          child: Text(
+            'Vídeo: ${video.author} · ${video.license} · ${video.source}',
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+          ),
+        ),
+      ],
+    );
+  }
 }

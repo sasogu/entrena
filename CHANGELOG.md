@@ -2,7 +2,15 @@
 
 Este archivo recoge los cambios relevantes de cada versión. Sigue el formato de [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y versionado semántico.
 
-## [Sin publicar] - 0.1.1
+## [Sin publicar] - 0.1.2
+
+### Añadido
+
+- Vídeo de técnica dentro de la ficha de 17 ejercicios: en bucle, sin sonido y sin conexión. Son vídeos con licencia libre de wger (CC BY-SA 4.0) y Wikimedia Commons (CC BY 3.0 y dominio público), recortados y reducidos (7 MB en total). Se indica cuando muestran una variante del ejercicio.
+- Se mantiene el botón de YouTube para ver más vídeos; en los ejercicios sin vídeo libre (sentadilla goblet, plancha, puente de glúteos, dead bug y extensión de cuádriceps) es la única opción.
+- Pantalla de Créditos (menú ⋮) con autor, licencia y fuente de cada vídeo, y las licencias del software.
+
+## [0.1.1] - 2026-10-03
 
 ### Añadido
 
@@ -31,4 +39,5 @@ Primera versión publicada.
 
 - Cuentas, sincronización entre dispositivos e integración con IA.
 
+[0.1.1]: https://github.com/sasogu/entrena/releases/tag/v0.1.1
 [0.1.0]: https://github.com/sasogu/entrena/releases/tag/v0.1.0

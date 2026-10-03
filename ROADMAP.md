@@ -16,10 +16,16 @@ El diseño debe seguir siendo sencillo de usar durante una sesión: registrar un
 
 Las alternativas actuales son plantillas locales sencillas, no recomendaciones generadas por IA. Los objetivos de fuerza, hipertrofia y resistencia ajustan las repeticiones sugeridas; otros objetivos usan una pauta general.
 
-## 0.1.1 · Copia de datos y fichas de ejercicios — en pruebas
+## 0.1.1 · Copia de datos y fichas de ejercicios — publicada
 
 - [x] Exportar e importar todos los datos en un fichero.
 - [x] Explicación de cada ejercicio con enlace a vídeos de técnica.
+- [x] Probar en el móvil y publicar.
+
+## 0.1.2 · Vídeos de técnica con licencia libre — en pruebas
+
+- [x] Vídeo corto dentro de la ficha (17 ejercicios), con créditos.
+- [ ] Grabar vídeos propios para los ejercicios sin vídeo libre.
 - [ ] Probar en el móvil y publicar.
 
 ## 0.2 · Cuentas y sincronización — pendiente

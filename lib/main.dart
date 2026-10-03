@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'backup.dart';
+import 'credits_screen.dart';
 import 'exercise_guide_sheet.dart';
 import 'models.dart';
 import 'progress.dart';
@@ -636,8 +637,14 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           PopupMenuButton<String>(
             tooltip: 'Más opciones',
-            onSelected: (value) =>
-                value == 'export' ? _exportData() : _importData(),
+            onSelected: (value) => switch (value) {
+              'export' => _exportData(),
+              'import' => _importData(),
+              _ => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CreditsScreen()),
+              ),
+            },
             itemBuilder: (context) => const [
               PopupMenuItem(
                 value: 'export',
@@ -653,6 +660,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(Icons.download),
                   title: Text('Importar datos'),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'credits',
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.info_outline),
+                  title: Text('Créditos'),
                 ),
               ),
             ],

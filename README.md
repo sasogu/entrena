@@ -35,4 +35,4 @@ Para generar un APK de publicación firmado, crea `android/key.properties` con `
 
 Consulta [ROADMAP.md](ROADMAP.md) para las siguientes etapas y [CHANGELOG.md](CHANGELOG.md) para el historial de versiones.
 
-El proyecto se distribuye bajo la licencia MIT; consulta [LICENSE](LICENSE). Para sincronizar entre móviles habrá que elegir un servicio de cuentas y backend. Las claves de un proveedor de IA no deben guardarse dentro de la aplicación Android.
+El código se distribuye bajo la licencia MIT; consulta [LICENSE](LICENSE). Los vídeos de `assets/videos/` son de sus autores y conservan su licencia (CC BY-SA 4.0, CC BY 3.0 o dominio público); consulta [assets/videos/CREDITS.md](assets/videos/CREDITS.md). Para sincronizar entre móviles habrá que elegir un servicio de cuentas y backend. Las claves de un proveedor de IA no deben guardarse dentro de la aplicación Android.
