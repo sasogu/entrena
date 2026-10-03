@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../exercise_guide_sheet.dart';
+import '../models.dart';
 import 'ai_client.dart';
 import 'ai_settings.dart';
 import 'routine_ai.dart';
@@ -232,7 +233,9 @@ class RoutineAiScreen extends StatefulWidget {
   });
   final String goal;
   final String historySummary;
-  final Future<void> Function(RoutineProposal proposal) onApply;
+
+  /// Aplica la propuesta y el objetivo con el que se pidió.
+  final Future<void> Function(RoutineProposal proposal, String goal) onApply;
   final AiSettingsStore? store;
   final AiClient? client;
 
@@ -244,6 +247,13 @@ class _RoutineAiScreenState extends State<RoutineAiScreen> {
   late final AiSettingsStore _store = widget.store ?? AiSettingsStore();
   late final AiClient _client = widget.client ?? AiClient();
   final _limitations = TextEditingController();
+  late final _customGoal = TextEditingController(
+    text: goalOptions.contains(widget.goal) ? '' : widget.goal,
+  );
+  late String _goalChoice = goalOptions.contains(widget.goal)
+      ? widget.goal
+      : _otherGoal;
+  static const _otherGoal = 'Otro';
   AiSettings? _settings;
   String _level = levelOptions.first;
   int _days = 3;
@@ -268,11 +278,15 @@ class _RoutineAiScreenState extends State<RoutineAiScreen> {
   @override
   void dispose() {
     _limitations.dispose();
+    _customGoal.dispose();
     super.dispose();
   }
 
+  String get _goal =>
+      _goalChoice == _otherGoal ? _customGoal.text.trim() : _goalChoice;
+
   RoutineRequest get _request => RoutineRequest(
-    goal: widget.goal,
+    goal: _goal,
     level: _level,
     daysPerWeek: _days,
     minutes: _minutes,
@@ -334,6 +348,10 @@ class _RoutineAiScreenState extends State<RoutineAiScreen> {
   Future<void> _ask() async {
     final settings = _settings;
     if (settings == null || !settings.ready) return;
+    if (_goal.isEmpty) {
+      setState(() => _error = 'Escribe tu objetivo.');
+      return;
+    }
     if (!settings.consented && !await _askConsent(settings)) return;
     setState(() {
       _loading = true;
@@ -362,9 +380,10 @@ class _RoutineAiScreenState extends State<RoutineAiScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('¿Usar «${proposal.name}»?'),
-        content: const Text(
+        content: Text(
           'Sustituirá los ejercicios de tu rutina actual. Tu historial no se '
-          'toca.',
+          'toca.'
+          '${_goal == widget.goal ? '' : '\n\nTu objetivo pasará a ser «$_goal».'}',
         ),
         actions: [
           TextButton(
@@ -379,7 +398,7 @@ class _RoutineAiScreenState extends State<RoutineAiScreen> {
       ),
     );
     if (confirmed != true || !mounted) return;
-    await widget.onApply(proposal);
+    await widget.onApply(proposal, _goal);
     if (mounted) Navigator.pop(context);
   }
 
@@ -419,7 +438,37 @@ class _RoutineAiScreenState extends State<RoutineAiScreen> {
                   ),
                   const SizedBox(height: 16),
                 ],
-                Text('Objetivo: ${widget.goal}', style: grey),
+                DropdownButtonFormField<String>(
+                  initialValue: _goalChoice,
+                  isExpanded: true,
+                  menuMaxHeight: 420,
+                  decoration: const InputDecoration(labelText: 'Objetivo'),
+                  items: [
+                    ...goalOptions.map(
+                      (goal) => DropdownMenuItem(
+                        value: goal,
+                        child: Text(goal, overflow: TextOverflow.ellipsis),
+                      ),
+                    ),
+                    const DropdownMenuItem(
+                      value: _otherGoal,
+                      child: Text('Escribir otro objetivo'),
+                    ),
+                  ],
+                  onChanged: (v) => setState(() {
+                    _goalChoice = v ?? _goalChoice;
+                    _proposals = null;
+                  }),
+                ),
+                if (_goalChoice == _otherGoal)
+                  TextField(
+                    controller: _customGoal,
+                    maxLength: 120,
+                    textCapitalization: TextCapitalization.sentences,
+                    decoration: const InputDecoration(
+                      hintText: 'Por ejemplo: preparar una ruta de montaña',
+                    ),
+                  ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   initialValue: _level,

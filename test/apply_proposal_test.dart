@@ -23,7 +23,7 @@ void main() {
 {"nombre":"Jalón al pecho","series":3,"repeticiones":"8-10"},
 {"nombre":"Remo sentado en polea","series":3,"repeticiones":"8-10"}]}]}''',
     ).single;
-    await state.applyProposalForTest(proposal);
+    await state.applyProposalForTest(proposal, 'Ganar fuerza');
     await tester.pumpAndSettle();
 
     // Hoy muestra los ejercicios nuevos.
@@ -35,6 +35,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Fuerza con máquinas'), findsWidgets);
     expect(find.text('Tu rutina actual'), findsOneWidget);
+    // El objetivo usado para pedir la propuesta pasa al perfil.
+    expect(find.textContaining('· ganar fuerza'), findsWidgets);
     expect(find.text('Actual'), findsNothing);
   });
 }

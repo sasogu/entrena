@@ -381,17 +381,20 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _applyProposal(RoutineProposal proposal) => _selectRoutine(
-    RoutineOption(
-      name: proposal.name,
-      summary: proposal.summary,
-      exercises: proposal.exercises,
-    ),
-  );
+  Future<void> _applyProposal(RoutineProposal proposal, String goal) {
+    _profile.goal = goal;
+    return _selectRoutine(
+      RoutineOption(
+        name: proposal.name,
+        summary: proposal.summary,
+        exercises: proposal.exercises,
+      ),
+    );
+  }
 
   @visibleForTesting
-  Future<void> applyProposalForTest(RoutineProposal proposal) =>
-      _applyProposal(proposal);
+  Future<void> applyProposalForTest(RoutineProposal proposal, String goal) =>
+      _applyProposal(proposal, goal);
 
   Future<void> _openRoutineAi() => Navigator.push(
     context,

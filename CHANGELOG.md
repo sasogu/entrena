@@ -2,6 +2,12 @@
 
 Este archivo recoge los cambios relevantes de cada versión. Sigue el formato de [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y versionado semántico.
 
+## 0.3.2 - 2026-10-03 (prueba)
+
+### Añadido
+
+- Elegir el objetivo en la pantalla de propuestas con IA (los 17 predefinidos o uno propio). Al usar una propuesta, el objetivo del perfil pasa a ser el elegido y el diálogo de confirmación lo avisa.
+
 ## 0.3.1 - 2026-10-03 (prueba)
 
 ### Añadido
