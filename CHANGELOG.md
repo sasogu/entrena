@@ -2,6 +2,13 @@
 
 Este archivo recoge los cambios relevantes de cada versión. Sigue el formato de [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y versionado semántico.
 
+## [Sin publicar]
+
+### Añadido
+
+- Nota opcional por sesión: se escribe desde Hoy y se muestra en el historial de Progreso.
+- Primeras pruebas unitarias del guardado de sesiones.
+
 ## [0.1.0] - 2026-09-25
 
 ### Añadido
@@ -16,4 +23,4 @@ Este archivo recoge los cambios relevantes de cada versión. Sigue el formato de
 
 ### Pendiente
 
-- Notas por sesión, cuentas, sincronización entre dispositivos e integración con IA.
+- Cuentas, sincronización entre dispositivos e integración con IA.

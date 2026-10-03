@@ -195,15 +195,18 @@ class WorkoutRecord {
     required this.date,
     required this.routineName,
     required this.exercises,
+    this.note = '',
   });
   final DateTime date;
   final String routineName;
   final List<LoggedExercise> exercises;
+  final String note;
 
   Map<String, dynamic> toJson() => {
     'date': date.toIso8601String(),
     'routineName': routineName,
     'exercises': exercises.map((exercise) => exercise.toJson()).toList(),
+    if (note.isNotEmpty) 'note': note,
   };
 
   factory WorkoutRecord.fromJson(Map<String, dynamic> json) => WorkoutRecord(
@@ -212,6 +215,7 @@ class WorkoutRecord {
     exercises: (json['exercises'] as List<dynamic>)
         .map((item) => LoggedExercise.fromJson(item as Map<String, dynamic>))
         .toList(),
+    note: json['note'] as String? ?? '',
   );
 }
 
@@ -229,6 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selected = 0;
   int _tab = 0;
   final Map<int, List<WorkoutSet>> _sessionSets = {};
+  String _sessionNote = '';
   bool _loaded = false;
 
   Profile get _profile => _profiles[_selected];
@@ -299,6 +304,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _profiles.add(Profile(name));
       _selected = _profiles.length - 1;
       _sessionSets.clear();
+      _sessionNote = '';
     });
     await _save();
   }
@@ -312,6 +318,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _selected = index;
       _sessionSets.clear();
+      _sessionNote = '';
     });
     await _save();
   }
@@ -440,9 +447,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               )
               .toList(),
+          note: _sessionNote,
         ),
       );
       _sessionSets.clear();
+      _sessionNote = '';
       _tab = 2;
     });
     await _save();
@@ -451,6 +460,39 @@ class _HomeScreenState extends State<HomeScreen> {
         context,
       ).showSnackBar(const SnackBar(content: Text('¡Entrenamiento guardado!')));
     }
+  }
+
+  Future<void> _editSessionNote() async {
+    final controller = TextEditingController(text: _sessionNote);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Nota de la sesión'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          minLines: 3,
+          maxLines: 6,
+          maxLength: 500,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: const InputDecoration(
+            hintText: 'Cómo te has sentido, molestias, técnica…',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('Guardar nota'),
+          ),
+        ],
+      ),
+    );
+    if (result == null || !mounted) return;
+    setState(() => _sessionNote = result);
   }
 
   Future<void> _logSet(int index) async {
@@ -728,6 +770,24 @@ class _HomeScreenState extends State<HomeScreen> {
       const SizedBox(height: 12),
       ..._profile.exercises.asMap().entries.map(
         (entry) => _exerciseTile(entry.key, entry.value),
+      ),
+      Card(
+        margin: const EdgeInsets.only(bottom: 9),
+        child: ListTile(
+          leading: const Icon(Icons.edit_note),
+          title: Text(
+            _sessionNote.isEmpty ? 'Añadir nota (opcional)' : 'Nota',
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          subtitle: _sessionNote.isEmpty
+              ? null
+              : Text(
+                  _sessionNote,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+          onTap: _editSessionNote,
+        ),
       ),
       const SizedBox(height: 10),
       FilledButton.icon(
@@ -1106,22 +1166,28 @@ class _HomeScreenState extends State<HomeScreen> {
                             style: const TextStyle(fontWeight: FontWeight.w700),
                           ),
                           subtitle: Text(_formatDate(record.date)),
-                          children: record.exercises
-                              .map(
-                                (exercise) => ListTile(
-                                  dense: true,
-                                  title: Text(exercise.name),
-                                  subtitle: Text(
-                                    exercise.sets
-                                        .map(
-                                          (set) =>
-                                              '${set.reps} rep · ${set.weight} kg',
-                                        )
-                                        .join('  /  '),
-                                  ),
+                          children: [
+                            if (record.note.isNotEmpty)
+                              ListTile(
+                                dense: true,
+                                leading: const Icon(Icons.edit_note),
+                                title: Text(record.note),
+                              ),
+                            ...record.exercises.map(
+                              (exercise) => ListTile(
+                                dense: true,
+                                title: Text(exercise.name),
+                                subtitle: Text(
+                                  exercise.sets
+                                      .map(
+                                        (set) =>
+                                            '${set.reps} rep · ${set.weight} kg',
+                                      )
+                                      .join('  /  '),
                                 ),
-                              )
-                              .toList(),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
               ],

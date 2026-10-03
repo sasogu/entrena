@@ -11,7 +11,7 @@ El diseño debe seguir siendo sencillo de usar durante una sesión: registrar un
 - [x] Editar la rutina y añadir o quitar ejercicios.
 - [x] Registrar series, repeticiones y peso por sesión.
 - [x] Guardar el historial de sesiones por perfil en el dispositivo.
-- [ ] Añadir notas opcionales por sesión.
+- [x] Añadir notas opcionales por sesión.
 - [ ] Revisar progresos por ejercicio y mejorar el historial.
 
 Las alternativas actuales son plantillas locales sencillas, no recomendaciones generadas por IA. Los objetivos de fuerza, hipertrofia y resistencia ajustan las repeticiones sugeridas; otros objetivos usan una pauta general.
