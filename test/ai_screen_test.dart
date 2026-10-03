@@ -29,7 +29,7 @@ Future<void> _pump(WidgetTester tester, String goal) async {
       home: RoutineAiScreen(
         goal: goal,
         historySummary: 'Sin sesiones registradas.',
-        onApply: (_, _) async {},
+        onApply: (_, _) async => true,
         store: _FakeStore(),
       ),
     ),

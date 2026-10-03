@@ -2,6 +2,14 @@
 
 Este archivo recoge los cambios relevantes de cada versión. Sigue el formato de [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y versionado semántico.
 
+## 0.6.0 - 2026-10-03 (prueba)
+
+### Añadido
+
+- Rutinas favoritas: en Rutinas, «Guardar en favoritas» guarda la rutina actual con todos sus días y el nombre que elijas. En Planifica, la sección «Rutinas favoritas» permite usarlas de nuevo, renombrarlas y borrarlas.
+- Al cambiar de rutina (de ejemplo, propuesta de la IA o favorita), si la actual tiene cambios que no están en favoritas, la app pregunta si quieres guardarla antes de sustituirla.
+- Las favoritas se incluyen al exportar e importar los datos.
+
 ## 0.5.1 - 2026-10-03 (prueba)
 
 ### Añadido

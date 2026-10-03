@@ -234,8 +234,9 @@ class RoutineAiScreen extends StatefulWidget {
   final String goal;
   final String historySummary;
 
-  /// Aplica la propuesta y el objetivo con el que se pidió.
-  final Future<void> Function(RoutineProposal proposal, String goal) onApply;
+  /// Aplica la propuesta y el objetivo con el que se pidió. Devuelve false
+  /// si al final no se aplica (por ejemplo, porque se cancela).
+  final Future<bool> Function(RoutineProposal proposal, String goal) onApply;
   final AiSettingsStore? store;
   final AiClient? client;
 
@@ -398,8 +399,8 @@ class _RoutineAiScreenState extends State<RoutineAiScreen> {
       ),
     );
     if (confirmed != true || !mounted) return;
-    await widget.onApply(proposal, _goal);
-    if (mounted) Navigator.pop(context);
+    final applied = await widget.onApply(proposal, _goal);
+    if (applied && mounted) Navigator.pop(context);
   }
 
   @override

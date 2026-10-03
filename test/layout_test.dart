@@ -1,5 +1,8 @@
 import 'package:entrena/exercise_catalog_screen.dart';
+import 'dart:convert';
+
 import 'package:entrena/main.dart';
+import 'package:entrena/models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,7 +32,18 @@ Future<void> _scrollToEnd(WidgetTester tester) async {
 void main() {
   testWidgets('las cuatro pestañas caben en un móvil', (tester) async {
     _phone(tester);
-    SharedPreferences.setMockInitialValues({});
+    // Con una favorita de nombre largo que además es la rutina actual.
+    final profile = Profile('Samuel');
+    profile.savedRoutines = [
+      SavedRoutine(
+        name: 'Mi semana de fuerza con barra y cardio suave',
+        days: profile.days,
+        savedAt: DateTime(2026, 10, 3),
+      ),
+    ];
+    SharedPreferences.setMockInitialValues({
+      'profiles_v1': jsonEncode([profile.toJson()]),
+    });
     await tester.pumpWidget(const EntrenaApp());
     await tester.pumpAndSettle();
     for (final tab in ['Hoy', 'Rutinas', 'Planifica', 'Progreso']) {

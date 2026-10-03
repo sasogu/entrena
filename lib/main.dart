@@ -411,6 +411,173 @@ class _HomeScreenState extends State<HomeScreen> {
     await _save();
   }
 
+  /// Si la rutina actual está guardada tal cual en favoritas.
+  bool get _currentIsSaved => _profile.savedRoutines.any(
+    (saved) => sameRoutineDays(saved.days, _profile.days),
+  );
+
+  /// Si la rutina actual es una rutina de ejemplo sin cambios (se puede
+  /// recuperar desde Planifica sin guardarla).
+  bool get _currentIsUnchangedTemplate =>
+      [...routineOptions, ..._optionsForGoal()].any(
+        (option) =>
+            option.name == _profile.routineName &&
+            sameRoutineDays(option.copyDays(), _profile.days),
+      );
+
+  Future<String?> _askRoutineName({
+    required String title,
+    required String initial,
+    String? hint,
+  }) async {
+    final controller = TextEditingController(text: initial);
+    final name = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: controller,
+              autofocus: true,
+              maxLength: 50,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(labelText: 'Nombre'),
+              onSubmitted: (value) => Navigator.pop(context, value.trim()),
+            ),
+            if (hint != null)
+              Text(
+                hint,
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+    return name == null || name.isEmpty ? null : name;
+  }
+
+  /// Guarda la rutina actual en favoritas. Devuelve false si se cancela.
+  Future<bool> _saveCurrentToFavorites() async {
+    final name = await _askRoutineName(
+      title: 'Guardar en favoritas',
+      initial: _profile.routineName == 'Mi rutina personalizada'
+          ? 'Mi rutina'
+          : _profile.routineName,
+      hint: 'Si ya tienes una favorita con este nombre, se actualiza.',
+    );
+    if (name == null || !mounted) return false;
+    setState(() {
+      _profile.savedRoutines.removeWhere((saved) => saved.name == name);
+      _profile.savedRoutines.insert(
+        0,
+        SavedRoutine(name: name, days: _profile.days, savedAt: DateTime.now()),
+      );
+      _profile.routineName = name;
+    });
+    await _save();
+    if (mounted) _showMessage('«$name» guardada en favoritas.');
+    return true;
+  }
+
+  /// Antes de sustituir la rutina actual, ofrece guardarla si no está en
+  /// favoritas ni es una rutina de ejemplo sin cambios. Devuelve false si la
+  /// persona cancela el cambio.
+  Future<bool> _confirmReplaceCurrent() async {
+    if (_currentIsSaved || _currentIsUnchangedTemplate) return true;
+    final choice = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('¿Guardar tu rutina actual?'),
+        content: Text(
+          '«${_profile.routineName}» no está en favoritas. Si cambias de '
+          'rutina sin guardarla, la perderás (tu historial no se toca).',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'discard'),
+            child: const Text('No guardar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, 'save'),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+    if (choice == null || !mounted) return false;
+    if (choice == 'save') return _saveCurrentToFavorites();
+    return true;
+  }
+
+  Future<void> _useFavorite(SavedRoutine saved) async {
+    if (!await _confirmReplaceCurrent()) return;
+    setState(() {
+      _profile.routineName = saved.name;
+      _profile.days = copyRoutineDays(saved.days);
+      _profile.nextDay = 0;
+      _day = 0;
+      _sessionSets.clear();
+    });
+    await _save();
+    _goToTab(1);
+    if (mounted) _showMessage('Ahora usas «${saved.name}».');
+  }
+
+  Future<void> _renameFavorite(SavedRoutine saved) async {
+    final name = await _askRoutineName(
+      title: 'Renombrar favorita',
+      initial: saved.name,
+    );
+    if (name == null || !mounted) return;
+    setState(() {
+      if (_profile.routineName == saved.name) _profile.routineName = name;
+      saved.name = name;
+    });
+    await _save();
+  }
+
+  Future<void> _deleteFavorite(SavedRoutine saved) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('¿Borrar «${saved.name}» de favoritas?'),
+        content: const Text(
+          'Si es tu rutina actual, la sigues teniendo en Rutinas.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Borrar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _profile.savedRoutines.remove(saved));
+    await _save();
+  }
+
   Future<void> _selectRoutine(RoutineOption option) async {
     setState(() {
       _profile.routineName = option.name;
@@ -427,7 +594,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _applyProposal(RoutineProposal proposal, String goal) async {
+  /// Aplica una propuesta de la IA. Devuelve false si se cancela.
+  Future<bool> _applyProposal(RoutineProposal proposal, String goal) async {
+    if (!await _confirmReplaceCurrent()) return false;
     _profile.goal = goal;
     await _selectRoutine(
       RoutineOption(
@@ -440,10 +609,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     // Lleva a Rutinas para ver la rutina que se acaba de elegir.
     _goToTab(1);
+    return true;
   }
 
   @visibleForTesting
-  Future<void> applyProposalForTest(RoutineProposal proposal, String goal) =>
+  Future<bool> applyProposalForTest(RoutineProposal proposal, String goal) =>
       _applyProposal(proposal, goal);
 
   Future<void> _openRoutineAi() => Navigator.push(
@@ -1365,6 +1535,74 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _favoriteCard(SavedRoutine saved) {
+    final isCurrent = sameRoutineDays(saved.days, _profile.days);
+    final date = saved.savedAt;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 4, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    saved.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                if (isCurrent) const Chip(label: Text('Actual')),
+                PopupMenuButton<String>(
+                  tooltip: 'Opciones de ${saved.name}',
+                  onSelected: (action) => action == 'rename'
+                      ? _renameFavorite(saved)
+                      : _deleteFavorite(saved),
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(value: 'rename', child: Text('Renombrar')),
+                    PopupMenuItem(value: 'delete', child: Text('Borrar')),
+                  ],
+                ),
+              ],
+            ),
+            Text(
+              'Guardada el ${date.day}/${date.month}/${date.year}',
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 6),
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: _daysSummary([
+                for (final day in saved.days) (day.name, day.exercises),
+              ]),
+            ),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: isCurrent
+                    ? OutlinedButton.icon(
+                        onPressed: () => _goToTab(1),
+                        icon: const Icon(Icons.visibility_outlined),
+                        label: const Text('Es tu rutina actual: verla'),
+                      )
+                    : FilledButton.tonal(
+                        onPressed: () => _useFavorite(saved),
+                        child: const Text('Usar esta rutina'),
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _currentRoutineCard() {
     final isTemplate = routineOptions.any(
       (option) => option.name == _profile.routineName,
@@ -1404,22 +1642,40 @@ class _HomeScreenState extends State<HomeScreen> {
             _daysSummary([
               for (final day in _profile.days) (day.name, day.exercises),
             ]),
-            if (!isTemplate)
+            if (!isTemplate && !_currentIsSaved)
               Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
-                  'Si eliges otra rutina, esta se sustituye.',
+                  'No está en favoritas: si eliges otra rutina, te preguntaré '
+                  'si quieres guardarla.',
                   style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
                 ),
               ),
             const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: () => _goToTab(0),
-                icon: const Icon(Icons.play_arrow),
-                label: const Text('Empezar'),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: _currentIsSaved
+                      ? OutlinedButton.icon(
+                          onPressed: null,
+                          icon: const Icon(Icons.star),
+                          label: const Text('En favoritas'),
+                        )
+                      : OutlinedButton.icon(
+                          onPressed: _saveCurrentToFavorites,
+                          icon: const Icon(Icons.star_border),
+                          label: const Text('Guardar en favoritas'),
+                        ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () => _goToTab(0),
+                    icon: const Icon(Icons.play_arrow),
+                    label: const Text('Empezar'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -1599,6 +1855,26 @@ class _HomeScreenState extends State<HomeScreen> {
         label: const Text('Cambiar objetivo'),
         style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(46)),
       ),
+      const SizedBox(height: 22),
+      const Row(
+        children: [
+          Icon(Icons.star, color: Color(0xFFE0A526)),
+          SizedBox(width: 8),
+          Text(
+            'Rutinas favoritas',
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 19),
+          ),
+        ],
+      ),
+      const SizedBox(height: 6),
+      if (_profile.savedRoutines.isEmpty)
+        Text(
+          'Todavía no tienes ninguna. Guarda tu rutina actual con «Guardar en '
+          'favoritas» en la pestaña Rutinas para recuperarla aquí cuando '
+          'quieras.',
+          style: TextStyle(color: Colors.grey.shade700),
+        ),
+      ..._profile.savedRoutines.map(_favoriteCard),
       const SizedBox(height: 16),
       Card(
         child: ListTile(
@@ -1678,6 +1954,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         )
                       : FilledButton.tonal(
                           onPressed: () async {
+                            if (!await _confirmReplaceCurrent()) return;
                             await _selectRoutine(option);
                             _goToTab(1);
                           },

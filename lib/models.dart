@@ -13,6 +13,9 @@ class Profile {
   /// Día que toca la próxima vez (índice en [days]).
   int nextDay = 0;
   List<WorkoutRecord> history = [];
+
+  /// Rutinas que la persona ha guardado para recuperarlas más tarde.
+  List<SavedRoutine> savedRoutines = [];
   String goal = 'Empezar a entrenar';
   String routineName = routineOptions.first.name;
 
@@ -25,6 +28,7 @@ class Profile {
     'days': days.map((day) => day.toJson()).toList(),
     'nextDay': nextDay,
     'history': history.map((record) => record.toJson()).toList(),
+    'savedRoutines': savedRoutines.map((routine) => routine.toJson()).toList(),
     'goal': goal,
     'routineName': routineName,
   };
@@ -61,10 +65,57 @@ class Profile {
           .map((item) => WorkoutRecord.fromJson(item as Map<String, dynamic>))
           .toList();
     }
+    profile.savedRoutines =
+        (json['savedRoutines'] as List<dynamic>? ?? const [])
+            .map((item) => SavedRoutine.fromJson(item as Map<String, dynamic>))
+            .toList();
     profile.goal = json['goal'] as String? ?? profile.goal;
     profile.routineName = json['routineName'] as String? ?? profile.routineName;
     return profile;
   }
+}
+
+/// Rutina guardada en favoritas: nombre y copia de sus días.
+class SavedRoutine {
+  SavedRoutine({
+    required this.name,
+    required List<RoutineDay> days,
+    required this.savedAt,
+  }) : days = copyRoutineDays(days);
+  String name;
+  final List<RoutineDay> days;
+  final DateTime savedAt;
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'days': days.map((day) => day.toJson()).toList(),
+    'savedAt': savedAt.toIso8601String(),
+  };
+
+  factory SavedRoutine.fromJson(Map<String, dynamic> json) => SavedRoutine(
+    name: json['name'] as String? ?? 'Rutina',
+    days: (json['days'] as List<dynamic>? ?? const [])
+        .map((item) => RoutineDay.fromJson(item as Map<String, dynamic>))
+        .toList(),
+    savedAt:
+        DateTime.tryParse(json['savedAt'] as String? ?? '') ?? DateTime.now(),
+  );
+}
+
+/// Copia independiente de unos días (para no compartir listas mutables).
+List<RoutineDay> copyRoutineDays(List<RoutineDay> days) => [
+  for (final day in days) RoutineDay(day.name, day.exercises),
+];
+
+/// Si dos rutinas tienen exactamente los mismos días y ejercicios.
+bool sameRoutineDays(List<RoutineDay> a, List<RoutineDay> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    final x = a[i].toJson().toString();
+    final y = b[i].toJson().toString();
+    if (x != y) return false;
+  }
+  return true;
 }
 
 /// Una sesión de la rutina (por ejemplo «Día A · Torso»).
