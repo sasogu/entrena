@@ -21,7 +21,7 @@ version: 0.6.0+15
 environment:
   sdk: ^3.9.2
   # Pinned SDK; see ~/.local/bin/flutterw and flutter-update-watch.
-  flutter: 3.35.7
+  flutter: 3.47.9
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -35,14 +35,14 @@ dependencies:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
+  cupertino_icons: ^2.0.0
   shared_preferences: ^2.5.5
-  file_picker: ^11.0.3
-  share_plus: ^12.0.2
+  file_picker: ^13.3.0
+  share_plus: ^13.3.1
   url_launcher: ^6.3.2
   video_player: ^2.10.1
   http: ^1.6.0
-  flutter_secure_storage: ^10.3.4
+  flutter_secure_storage: ^11.2.0
 
 dev_dependencies:
   flutter_test:
@@ -53,7 +53,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the

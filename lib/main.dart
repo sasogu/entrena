@@ -262,9 +262,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _importData() async {
     final List<Profile> imported;
     try {
-      final picked = await FilePicker.pickFiles(withData: true);
-      final bytes = picked?.files.single.bytes;
-      if (bytes == null) return;
+      final picked = await FilePicker.pickFile();
+      if (picked == null) return;
+      final bytes = await picked.readAsBytes();
       imported = decodeBackup(utf8.decode(bytes, allowMalformed: true));
     } on BackupException catch (error) {
       if (mounted) _showMessage(error.message);
@@ -1744,7 +1744,8 @@ class _HomeScreenState extends State<HomeScreen> {
         physics: const NeverScrollableScrollPhysics(),
         buildDefaultDragHandles: false,
         itemCount: _exercises.length,
-        onReorder: (from, to) => _moveExercise(from, to > from ? to - 1 : to),
+        // onReorderItem already adjusts the target for the removed item.
+        onReorderItem: _moveExercise,
         itemBuilder: (context, index) {
           final exercise = _exercises[index];
           final last = index == _exercises.length - 1;
